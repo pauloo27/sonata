@@ -6,7 +6,7 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-func newSidebar(project *data.Project) *gtk.Box {
+func newSidebar(project *data.Project, selectedProject chan *data.Request) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	utils.HandleErr(err)
 
@@ -25,6 +25,10 @@ func newSidebar(project *data.Project) *gtk.Box {
 		row.Add(label)
 		list.Add(row)
 	}
+
+	list.Connect("row-selected", func() {
+		selectedProject <- project.ListRequests()[list.GetSelectedRow().GetIndex()]
+	})
 
 	container.Add(newSidebarHeader())
 	container.Add(list)

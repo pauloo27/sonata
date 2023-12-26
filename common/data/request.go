@@ -26,6 +26,18 @@ const (
 	HTTPMethodOption HTTPMethod = "OPTION"
 )
 
+var (
+	HTTPMethods = []HTTPMethod{
+		HTTPMethodGet,
+		HTTPMethodPost,
+		HTTPMethodPut,
+		HTTPMethodDelete,
+		HTTPMethodPatch,
+		HTTPMethodHead,
+		HTTPMethodOption,
+	}
+)
+
 type Request struct {
 	Name        string     `json:"-"`
 	Description string     `json:"description"`

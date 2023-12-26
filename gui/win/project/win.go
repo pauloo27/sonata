@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 
+	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
@@ -29,8 +30,27 @@ func Start(path string) {
 
 	container.SetPosition(200)
 
-	container.Add1(newSidebar(project))
-	container.Add2(newContentContainer())
+	selectedRequest := make(chan *data.Request)
+	var contentContainer *gtk.Box
+
+	container.Add1(newSidebar(project, selectedRequest))
+	go func() {
+		for {
+			request := <-selectedRequest
+			if request != nil {
+				glib.IdleAdd(func() {
+					fmt.Println("Selected request:", request.Name)
+					if contentContainer != nil {
+						container.Remove(contentContainer)
+						contentContainer.Destroy()
+					}
+					contentContainer = newContentContainer(request)
+					container.Add2(contentContainer)
+					container.ShowAll()
+				})
+			}
+		}
+	}()
 
 	win.Add(container)
 

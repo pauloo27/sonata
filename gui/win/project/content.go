@@ -2,10 +2,11 @@ package project
 
 import (
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-func newContentContainer() *gtk.Box {
+func newContentContainer(request *data.Request) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
 	utils.HandleErr(err)
 
@@ -14,7 +15,7 @@ func newContentContainer() *gtk.Box {
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
-	container.Add(newRequestURLContainer())
+	container.Add(newRequestURLContainer(request))
 
 	subContainer, err := gtk.PanedNew(gtk.ORIENTATION_VERTICAL)
 	utils.HandleErr(err)
@@ -30,23 +31,28 @@ func newContentContainer() *gtk.Box {
 	return container
 }
 
-func newRequestURLContainer() *gtk.Box {
+func newRequestURLContainer(request *data.Request) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5)
 	utils.HandleErr(err)
 
 	methods, err := gtk.ComboBoxTextNew()
 	utils.HandleErr(err)
 
-	methods.AppendText("GET")
-	methods.AppendText("POST")
-	methods.AppendText("PUT")
-	methods.AppendText("DELETE")
-	methods.AppendText("PATCH")
-	methods.AppendText("HEAD")
-	methods.AppendText("OPTIONS")
+	requestMethodIdx := 0
+
+	for i, method := range data.HTTPMethods {
+		methods.AppendText(string(method))
+		if method == request.Method {
+			requestMethodIdx = i
+		}
+	}
+
+	methods.SetActive(requestMethodIdx)
 
 	entry, err := gtk.EntryNew()
 	utils.HandleErr(err)
+
+	entry.SetText(request.URL)
 
 	entry.SetHExpand(true)
 
@@ -66,7 +72,7 @@ func newRequestStructureContainer() *gtk.Notebook {
 	container, err := gtk.NotebookNew()
 	utils.HandleErr(err)
 
-	overviewContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
+	parametersContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	utils.HandleErr(err)
 
 	bodyContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
@@ -82,11 +88,11 @@ func newRequestStructureContainer() *gtk.Notebook {
 		return lbl
 	}
 
-	overviewContainer.Add(newLbl("Overview"))
+	parametersContainer.Add(newLbl("Parameters"))
 	bodyContainer.Add(newLbl("Body"))
 	headersContainer.Add(newLbl("Headers"))
 
-	container.AppendPage(overviewContainer, newLbl("Overview"))
+	container.AppendPage(parametersContainer, newLbl("Parameters"))
 	container.AppendPage(bodyContainer, newLbl("Body"))
 	container.AppendPage(headersContainer, newLbl("Headers"))
 
