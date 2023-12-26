@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	runKeyValuePairs []string
+)
+
 var Run = &cobra.Command{
 	Use:   "run",
 	Short: "Run a request",
@@ -35,8 +39,10 @@ var Run = &cobra.Command{
 			panic("Request not found")
 		}
 
+		params := parseRunParams(runKeyValuePairs)
+
 		client := client.NewClient()
-		res, err := client.Run(request)
+		res, err := client.Run(request, params)
 		if err != nil {
 			panic(err)
 		}
@@ -66,4 +72,25 @@ var Run = &cobra.Command{
 		}
 		fmt.Print(out)
 	},
+}
+
+func init() {
+	Run.Flags().StringSliceVarP(
+		&runKeyValuePairs, "params", "p", []string{}, "-p key=value -p key2=value2",
+	)
+}
+
+func parseRunParams(keyValuePairs []string) map[string]any {
+	params := make(map[string]any)
+
+	for _, pair := range keyValuePairs {
+		splitted := strings.SplitN(pair, "=", 2)
+
+		key := splitted[0]
+		value := splitted[1]
+
+		params[key] = value
+	}
+
+	return params
 }

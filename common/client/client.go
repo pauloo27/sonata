@@ -3,7 +3,11 @@ package client
 import (
 	"io"
 	"net/http"
+	"strings"
 
+	"text/template"
+
+	"github.com/google/uuid"
 	"github.com/pauloo27/sonata/common/data"
 )
 
@@ -23,9 +27,24 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Run(req *data.Request) (*Response, error) {
-	// TODO: body and headers
-	httpReq, err := http.NewRequest(string(req.Method), req.URL, nil)
+func (c *Client) Run(req *data.Request, params map[string]any) (*Response, error) {
+	uriTemplate := req.URL
+
+	var sb strings.Builder
+
+	err := template.Must(
+		template.New("url").
+			Funcs(template.FuncMap{
+				"randomUUID": randomUUID,
+			}).
+			Parse(uriTemplate),
+	).
+		Execute(&sb, params)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest(string(req.Method), sb.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,4 +71,8 @@ func (c *Client) Run(req *data.Request) (*Response, error) {
 		Body:       body,
 		Headers:    httpRes.Header,
 	}, nil
+}
+
+func randomUUID() string {
+	return uuid.New().String()
 }
