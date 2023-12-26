@@ -27,7 +27,7 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Run(req *data.Request, params map[string]any) (*Response, error) {
+func (c *Client) Run(req *data.Request, params map[string]string) (*Response, error) {
 	uriTemplate := req.URL
 
 	var sb strings.Builder

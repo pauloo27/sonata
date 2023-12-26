@@ -80,8 +80,8 @@ func init() {
 	)
 }
 
-func parseRunParams(keyValuePairs []string) map[string]any {
-	params := make(map[string]any)
+func parseRunParams(keyValuePairs []string) map[string]string {
+	params := make(map[string]string)
 
 	for _, pair := range keyValuePairs {
 		splitted := strings.SplitN(pair, "=", 2)
