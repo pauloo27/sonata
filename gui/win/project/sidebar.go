@@ -1,6 +1,9 @@
-package win
+package project
 
-import "github.com/gotk3/gotk3/gtk"
+import (
+	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/gui/utils"
+)
 
 var (
 	sampleList = []string{
@@ -14,19 +17,19 @@ var (
 
 func newSidebar() *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.SetHExpand(true)
 
 	list, err := gtk.ListBoxNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	for _, item := range sampleList {
 		row, err := gtk.ListBoxRowNew()
-		handleErr(err)
+		utils.HandleErr(err)
 
 		label, err := gtk.LabelNew(item)
-		handleErr(err)
+		utils.HandleErr(err)
 
 		row.Add(label)
 		list.Add(row)
@@ -40,12 +43,12 @@ func newSidebar() *gtk.Box {
 
 func newSidebarHeader() *gtk.HeaderBar {
 	container, err := gtk.HeaderBarNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.SetTitle("Sonata")
 
 	settingsBtn, err := gtk.ButtonNewFromIconName("open-menu-symbolic", gtk.ICON_SIZE_BUTTON)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.PackStart(settingsBtn)
 

@@ -1,15 +1,15 @@
-package win
+package project
 
 import (
 	"fmt"
 
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/gui/utils"
 )
 
-func Start() {
-	gtk.Init(nil)
+func Start(path string) {
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	win.SetTitle("Sonata")
 	win.SetDefaultSize(800, 600)
@@ -18,10 +18,10 @@ func Start() {
 		fmt.Println("Closed")
 		gtk.MainQuit()
 	})
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container, err := gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.SetPosition(200)
 
@@ -31,11 +31,4 @@ func Start() {
 	win.Add(container)
 
 	win.ShowAll()
-	gtk.Main()
-}
-
-func handleErr(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

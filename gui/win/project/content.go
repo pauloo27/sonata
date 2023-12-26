@@ -1,10 +1,13 @@
-package win
+package project
 
-import "github.com/gotk3/gotk3/gtk"
+import (
+	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/gui/utils"
+)
 
 func newContentContainer() *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.SetMarginTop(5)
 	container.SetMarginBottom(5)
@@ -14,7 +17,7 @@ func newContentContainer() *gtk.Box {
 	container.Add(newRequestURLContainer())
 
 	subContainer, err := gtk.PanedNew(gtk.ORIENTATION_VERTICAL)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	subContainer.SetPosition(500)
 	subContainer.Add1(newRequestStructureContainer())
@@ -29,10 +32,10 @@ func newContentContainer() *gtk.Box {
 
 func newRequestURLContainer() *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	methods, err := gtk.ComboBoxTextNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	methods.AppendText("GET")
 	methods.AppendText("POST")
@@ -43,12 +46,12 @@ func newRequestURLContainer() *gtk.Box {
 	methods.AppendText("OPTIONS")
 
 	entry, err := gtk.EntryNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	entry.SetHExpand(true)
 
 	sendBtn, err := gtk.ButtonNewWithLabel("Go")
-	handleErr(err)
+	utils.HandleErr(err)
 
 	container.Add(methods)
 	container.Add(entry)
@@ -61,20 +64,20 @@ func newRequestURLContainer() *gtk.Box {
 
 func newRequestStructureContainer() *gtk.Notebook {
 	container, err := gtk.NotebookNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	overviewContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	bodyContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	headersContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	newLbl := func(label string) *gtk.Label {
 		lbl, err := gtk.LabelNew(label)
-		handleErr(err)
+		utils.HandleErr(err)
 
 		return lbl
 	}
@@ -94,20 +97,20 @@ func newRequestStructureContainer() *gtk.Notebook {
 
 func newResponseContainer() *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	notebook, err := gtk.NotebookNew()
-	handleErr(err)
+	utils.HandleErr(err)
 
 	bodyContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	headersContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	handleErr(err)
+	utils.HandleErr(err)
 
 	newLbl := func(label string) *gtk.Label {
 		lbl, err := gtk.LabelNew(label)
-		handleErr(err)
+		utils.HandleErr(err)
 
 		return lbl
 	}
@@ -121,7 +124,7 @@ func newResponseContainer() *gtk.Box {
 	notebook.SetVExpand(true)
 
 	title, err := gtk.LabelNew("Response")
-	handleErr(err)
+	utils.HandleErr(err)
 
 	title.SetHAlign(gtk.ALIGN_CENTER)
 
