@@ -1,9 +1,10 @@
-package model
+package data
 
 import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 )
 
 const (
@@ -33,7 +34,45 @@ func LoadProject(rootDir string) (*Project, error) {
 	}
 
 	project.rootDir = rootDir
+	if err := loadProjectRequests(&project); err != nil {
+		return nil, err
+	}
+
 	return &project, nil
+}
+
+func loadProjectRequests(project *Project) error {
+	project.requests = make(map[string]*Request)
+
+	files, err := os.ReadDir(project.rootDir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".json") {
+			continue
+		}
+
+		data, err := os.ReadFile(path.Join(project.rootDir, file.Name()))
+		if err != nil {
+			return err
+		}
+
+		var request Request
+		err = json.Unmarshal(data, &request)
+		if err != nil {
+			return err
+		}
+
+		request.path = path.Join(project.rootDir, file.Name())
+		request.p = project
+		request.Name = strings.TrimSuffix(file.Name(), ".json")
+
+		project.requests[request.Name] = &request
+	}
+
+	return nil
 }
 
 func NewProject(rootDir string, name string) (*Project, error) {
@@ -53,4 +92,9 @@ func (p *Project) Save() error {
 	}
 
 	return os.WriteFile(path.Join(p.rootDir, "sonata.json"), data, 420)
+}
+
+func (p *Project) GetRequest(name string) (*Request, bool) {
+	r, found := p.requests[name]
+	return r, found
 }

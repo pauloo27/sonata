@@ -1,4 +1,4 @@
-package model
+package data
 
 import (
 	"encoding/json"
@@ -10,9 +10,20 @@ type BodyType string
 type HTTPMethod string
 
 const (
+	BodyTypeNone BodyType = "none"
 	BodyTypeJSON BodyType = "json"
 	BodyTypeForm BodyType = "form"
 	BodyTypeText BodyType = "text"
+)
+
+const (
+	HTTPMethodGet    HTTPMethod = "GET"
+	HTTPMethodPost   HTTPMethod = "POST"
+	HTTPMethodPut    HTTPMethod = "PUT"
+	HTTPMethodDelete HTTPMethod = "DELETE"
+	HTTPMethodPatch  HTTPMethod = "PATCH"
+	HTTPMethodHead   HTTPMethod = "HEAD"
+	HTTPMethodOption HTTPMethod = "OPTION"
 )
 
 type Request struct {
@@ -23,8 +34,9 @@ type Request struct {
 	URL      string            `json:"url"`
 	BodyType BodyType          `json:"body_type"`
 	Body     string            `json:"body_template"`
-	Version  string            `json:"version"`
 	Headers  map[string]string `json:"headers"`
+
+	Version string `json:"version"`
 
 	path string   `json:"-"`
 	p    *Project `json:"-"`
