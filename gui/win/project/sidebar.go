@@ -2,20 +2,11 @@ package project
 
 import (
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-var (
-	sampleList = []string{
-		"Get user",
-		"Get users",
-		"Create user",
-		"Update user",
-		"Delete user",
-	}
-)
-
-func newSidebar() *gtk.Box {
+func newSidebar(project *data.Project) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	utils.HandleErr(err)
 
@@ -24,11 +15,11 @@ func newSidebar() *gtk.Box {
 	list, err := gtk.ListBoxNew()
 	utils.HandleErr(err)
 
-	for _, item := range sampleList {
+	for _, request := range project.ListRequests() {
 		row, err := gtk.ListBoxRowNew()
 		utils.HandleErr(err)
 
-		label, err := gtk.LabelNew(item)
+		label, err := gtk.LabelNew(request.Name)
 		utils.HandleErr(err)
 
 		row.Add(label)

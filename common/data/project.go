@@ -17,7 +17,8 @@ type Project struct {
 
 	rootDir string `json:"-"`
 
-	requests map[string]*Request `json:"-"`
+	requests   []*Request          `json:"-"`
+	requestMap map[string]*Request `json:"-"`
 }
 
 func LoadProject(rootDir string) (*Project, error) {
@@ -42,7 +43,7 @@ func LoadProject(rootDir string) (*Project, error) {
 }
 
 func loadProjectRequests(project *Project) error {
-	project.requests = make(map[string]*Request)
+	project.requestMap = make(map[string]*Request)
 
 	files, err := os.ReadDir(project.rootDir)
 	if err != nil {
@@ -65,11 +66,13 @@ func loadProjectRequests(project *Project) error {
 			return err
 		}
 
+		project.requests = append(project.requests, &request)
+
 		request.path = path.Join(project.rootDir, file.Name())
 		request.p = project
 		request.Name = strings.TrimSuffix(file.Name(), ".json")
 
-		project.requests[request.Name] = &request
+		project.requestMap[request.Name] = &request
 	}
 
 	return nil
@@ -95,6 +98,10 @@ func (p *Project) Save() error {
 }
 
 func (p *Project) GetRequest(name string) (*Request, bool) {
-	r, found := p.requests[name]
+	r, found := p.requestMap[name]
 	return r, found
+}
+
+func (p *Project) ListRequests() []*Request {
+	return p.requests
 }
