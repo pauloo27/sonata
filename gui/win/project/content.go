@@ -8,6 +8,13 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
+type ContentStore struct {
+	Project    *data.Project
+	Request    *data.Request
+	VarStore   *VariablesStore
+	ResponseCh chan *client.Response
+}
+
 func newContentContainer(request *data.Request) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
 	container.SetMarginTop(5)
@@ -15,15 +22,18 @@ func newContentContainer(request *data.Request) *gtk.Box {
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
-	varStore := newVariablesStore()
-	responseCh := make(chan *client.Response, 2)
+	store := &ContentStore{
+		Request:    request,
+		VarStore:   newVariablesStore(),
+		ResponseCh: make(chan *client.Response, 2),
+	}
 
-	container.Add(newRequestURLContainer(request, varStore, responseCh))
+	container.Add(newRequestURLContainer(store))
 
 	subContainer := utils.Must(gtk.PanedNew(gtk.ORIENTATION_VERTICAL))
 	subContainer.SetPosition(500)
-	subContainer.Add1(newRequestStructureContainer(varStore))
-	subContainer.Add2(newResponseContainer(varStore, responseCh))
+	subContainer.Add1(newRequestStructureContainer(store))
+	subContainer.Add2(newResponseContainer(store))
 
 	container.Add(subContainer)
 	container.SetHExpand(true)
@@ -32,8 +42,7 @@ func newContentContainer(request *data.Request) *gtk.Box {
 }
 
 func newRequestURLContainer(
-	request *data.Request, store *VariablesStore,
-	responseCh chan *client.Response,
+	store *ContentStore,
 ) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 
@@ -43,7 +52,7 @@ func newRequestURLContainer(
 
 	for i, method := range data.HTTPMethods {
 		methods.AppendText(string(method))
-		if method == request.Method {
+		if method == store.Request.Method {
 			requestMethodIdx = i
 		}
 	}
@@ -51,7 +60,7 @@ func newRequestURLContainer(
 	methods.SetActive(requestMethodIdx)
 
 	entry := utils.Must(gtk.EntryNew())
-	entry.SetText(request.URL)
+	entry.SetText(store.Request.URL)
 	entry.SetHExpand(true)
 
 	sendBtn := utils.Must(gtk.ButtonNewWithLabel("Go"))
@@ -60,14 +69,14 @@ func newRequestURLContainer(
 
 		variables := make(map[string]string)
 
-		for _, variable := range store.List() {
+		for _, variable := range store.VarStore.List() {
 			variables[variable.Key] = variable.Value
 		}
 
-		res, err := client.Run(request, variables)
+		res, err := client.Run(store.Request, variables)
 		// FIXME: proper error handling
 		utils.HandleErr(err)
-		responseCh <- res
+		store.ResponseCh <- res
 	})
 
 	container.Add(methods)
@@ -79,14 +88,14 @@ func newRequestURLContainer(
 	return container
 }
 
-func newRequestStructureContainer(store *VariablesStore) *gtk.Notebook {
+func newRequestStructureContainer(store *ContentStore) *gtk.Notebook {
 	container := utils.Must(gtk.NotebookNew())
 	bodyContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
-	parameterContainer := newParametersContainer(store)
+	variablesContainer := newVariablesContainer(store)
 
-	container.AppendPage(parameterContainer, utils.Must(gtk.LabelNew("Parameters")))
+	container.AppendPage(variablesContainer, utils.Must(gtk.LabelNew("Variables")))
 	container.AppendPage(bodyContainer, utils.Must(gtk.LabelNew("Body")))
 	container.AppendPage(headersContainer, utils.Must(gtk.LabelNew("Headers")))
 	container.SetVExpand(true)
@@ -95,7 +104,7 @@ func newRequestStructureContainer(store *VariablesStore) *gtk.Notebook {
 }
 
 func newResponseContainer(
-	store *VariablesStore, responseCh chan *client.Response,
+	store *ContentStore,
 ) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
@@ -127,7 +136,7 @@ func newResponseContainer(
 
 	go func() {
 		for {
-			response := <-responseCh
+			response := <-store.ResponseCh
 			if response != nil {
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
@@ -159,6 +168,24 @@ func newResponseContainer(
 			}
 		}
 	}()
+
+	return container
+}
+
+func newEmptyContentContainer() *gtk.Box {
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+	container.SetHExpand(true)
+	container.SetVExpand(true)
+	container.SetHAlign(gtk.ALIGN_CENTER)
+	container.SetVAlign(gtk.ALIGN_CENTER)
+
+	title := utils.Must(gtk.LabelNew("Select a request to start"))
+	title.SetHAlign(gtk.ALIGN_CENTER)
+	title.SetVAlign(gtk.ALIGN_CENTER)
+
+	utils.AddCSSClass(title.Widget, "welcome-subtitle")
+
+	container.Add(title)
 
 	return container
 }

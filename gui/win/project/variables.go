@@ -24,7 +24,7 @@ func (s *VariablesStore) Add(key, value string) {
 	s.container.GetChildren().Foreach(func(item interface{}) {
 		item.(*gtk.Widget).Destroy()
 	})
-	showParameters(s, s.container)
+	showVariables(s, s.container)
 	s.container.ShowAll()
 }
 
@@ -46,7 +46,7 @@ type KeyValuePair struct {
 	Value string
 }
 
-func newParametersContainer(store *VariablesStore) *gtk.ScrolledWindow {
+func newVariablesContainer(store *ContentStore) *gtk.ScrolledWindow {
 	container, err := gtk.GridNew()
 	utils.HandleErr(err)
 
@@ -61,8 +61,8 @@ func newParametersContainer(store *VariablesStore) *gtk.ScrolledWindow {
 	container.SetColumnSpacing(5)
 	container.SetColumnHomogeneous(true)
 
-	store.container = container
-	showParameters(store, container)
+	store.VarStore.container = container
+	showVariables(store.VarStore, container)
 
 	scrolledWindow, err := gtk.ScrolledWindowNew(nil, nil)
 	utils.HandleErr(err)
@@ -72,9 +72,9 @@ func newParametersContainer(store *VariablesStore) *gtk.ScrolledWindow {
 	return scrolledWindow
 }
 
-func showParameters(store *VariablesStore, container *gtk.Grid) {
+func showVariables(varStore *VariablesStore, container *gtk.Grid) {
 	lastRow := 0
-	for i, variable := range store.List() {
+	for i, variable := range varStore.List() {
 		keyEntry, err := gtk.EntryNew()
 		utils.HandleErr(err)
 
@@ -114,7 +114,7 @@ func showParameters(store *VariablesStore, container *gtk.Grid) {
 	utils.HandleErr(err)
 
 	addBtn.Connect("clicked", func() {
-		store.Add("", "")
+		varStore.Add("", "")
 	})
 
 	container.Attach(addBtn, 0, lastRow+1, 2, 1)

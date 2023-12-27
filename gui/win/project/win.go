@@ -27,19 +27,19 @@ func Start(path string) {
 	container.SetPosition(200)
 
 	selectedRequest := make(chan *data.Request)
-	var contentContainer *gtk.Box
+
+	contentContainer := newEmptyContentContainer()
 
 	container.Add1(newSidebar(project, selectedRequest))
+	container.Add2(contentContainer)
+
 	go func() {
 		for {
 			request := <-selectedRequest
 			if request != nil {
 				glib.IdleAdd(func() {
-					fmt.Println("Selected request:", request.Name)
-					if contentContainer != nil {
-						container.Remove(contentContainer)
-						contentContainer.Destroy()
-					}
+					container.Remove(contentContainer)
+					contentContainer.Destroy()
 					contentContainer = newContentContainer(request)
 					container.Add2(contentContainer)
 					container.ShowAll()
