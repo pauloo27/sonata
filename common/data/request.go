@@ -7,7 +7,6 @@ import (
 )
 
 type BodyType string
-type HTTPMethod string
 
 const (
 	BodyTypeNone BodyType = "none"
@@ -15,6 +14,8 @@ const (
 	BodyTypeForm BodyType = "form"
 	BodyTypeText BodyType = "text"
 )
+
+type HTTPMethod string
 
 const (
 	HTTPMethodGet    HTTPMethod = "GET"
@@ -27,7 +28,7 @@ const (
 )
 
 var (
-	HTTPMethods = []HTTPMethod{
+	HTTPMethods = [...]HTTPMethod{
 		HTTPMethodGet,
 		HTTPMethodPost,
 		HTTPMethodPut,
