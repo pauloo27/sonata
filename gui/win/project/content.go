@@ -88,14 +88,16 @@ func newRequestURLContainer(
 			}
 
 			res, err := client.Run(store.DraftRequest, variables)
-			// FIXME: proper error handling
-			utils.HandleErr(err)
+			if err == nil {
+				store.ResponseCh <- res
+			} else {
+				handleRequestError(err)
+			}
 
 			glib.IdleAdd(func() {
 				sendBtn.SetSensitive(true)
 			})
 
-			store.ResponseCh <- res
 		}()
 	})
 
@@ -214,4 +216,11 @@ func newEmptyContentContainer() *gtk.Box {
 	container.Add(title)
 
 	return container
+}
+
+func handleRequestError(err error) {
+	utils.ShowErrorDialog(
+		nil, // FIXME?
+		err.Error(),
+	)
 }
