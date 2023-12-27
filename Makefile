@@ -18,6 +18,10 @@ dist-gui:
 dist-cli:
 	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata ./cli/sonata
 
+.PHONY: cross-build
+cross-build:
+	docker build -f ./build/win/Dockerfile -t sonata-win .
+
 .PHONY: run
 run: build
 	./sonata-gui
