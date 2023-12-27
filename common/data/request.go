@@ -90,3 +90,19 @@ func (r *Request) Save() error {
 
 	return os.WriteFile(r.path, data, 420)
 }
+
+func (r *Request) Clone() *Request {
+	return &Request{
+		Name:        r.Name,
+		Description: r.Description,
+		Method:      r.Method,
+		URL:         r.URL,
+		BodyType:    r.BodyType,
+		Body:        r.Body,
+		Headers:     r.Headers,
+		Version:     r.Version,
+
+		path: r.path,
+		p:    r.p,
+	}
+}

@@ -21,9 +21,7 @@ func (s *VariablesStore) Add(key, value string) {
 		Key:   key,
 		Value: value,
 	})
-	s.container.GetChildren().Foreach(func(item interface{}) {
-		item.(*gtk.Widget).Destroy()
-	})
+	utils.ClearChildren(s.container.Container)
 	showVariables(s, s.container)
 	s.container.ShowAll()
 }

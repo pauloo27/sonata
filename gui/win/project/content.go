@@ -9,10 +9,11 @@ import (
 )
 
 type ContentStore struct {
-	Project    *data.Project
-	Request    *data.Request
-	VarStore   *VariablesStore
-	ResponseCh chan *client.Response
+	Project      *data.Project
+	SavedRequest *data.Request
+	DraftRequest *data.Request
+	VarStore     *VariablesStore
+	ResponseCh   chan *client.Response
 }
 
 func newContentContainer(request *data.Request) *gtk.Box {
@@ -22,10 +23,13 @@ func newContentContainer(request *data.Request) *gtk.Box {
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
+	draftRequest := request.Clone()
+
 	store := &ContentStore{
-		Request:    request,
-		VarStore:   newVariablesStore(),
-		ResponseCh: make(chan *client.Response, 2),
+		SavedRequest: request,
+		DraftRequest: draftRequest,
+		VarStore:     newVariablesStore(),
+		ResponseCh:   make(chan *client.Response, 2),
 	}
 
 	container.Add(newRequestURLContainer(store))
@@ -52,16 +56,24 @@ func newRequestURLContainer(
 
 	for i, method := range data.HTTPMethods {
 		methods.AppendText(string(method))
-		if method == store.Request.Method {
+		if method == store.DraftRequest.Method {
 			requestMethodIdx = i
 		}
 	}
 
 	methods.SetActive(requestMethodIdx)
 
+	methods.Connect("changed", func() {
+		store.DraftRequest.Method = data.HTTPMethod(methods.GetActiveText())
+	})
+
 	entry := utils.Must(gtk.EntryNew())
-	entry.SetText(store.Request.URL)
+	entry.SetText(store.DraftRequest.URL)
 	entry.SetHExpand(true)
+
+	entry.Connect("changed", func() {
+		store.DraftRequest.URL = utils.Must(entry.GetText())
+	})
 
 	sendBtn := utils.Must(gtk.ButtonNewWithLabel("Go"))
 	sendBtn.Connect("clicked", func() {
@@ -75,7 +87,7 @@ func newRequestURLContainer(
 				variables[variable.Key] = variable.Value
 			}
 
-			res, err := client.Run(store.Request, variables)
+			res, err := client.Run(store.DraftRequest, variables)
 			// FIXME: proper error handling
 			utils.HandleErr(err)
 
@@ -87,8 +99,16 @@ func newRequestURLContainer(
 		}()
 	})
 
+	saveBtn := utils.Must(gtk.ButtonNewWithLabel("Save"))
+	saveBtn.Connect("clicked", func() {
+		*store.SavedRequest = *store.DraftRequest
+		err := store.SavedRequest.Save()
+		utils.HandleErr(err)
+	})
+
 	container.Add(methods)
 	container.Add(entry)
+	container.Add(saveBtn)
 	container.Add(sendBtn)
 
 	container.SetHExpand(true)
@@ -98,8 +118,9 @@ func newRequestURLContainer(
 
 func newRequestStructureContainer(store *ContentStore) *gtk.Notebook {
 	container := utils.Must(gtk.NotebookNew())
-	bodyContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+
+	bodyContainer := newBodyContainer(store)
 
 	variablesContainer := newVariablesContainer(store)
 
@@ -107,6 +128,21 @@ func newRequestStructureContainer(store *ContentStore) *gtk.Notebook {
 	container.AppendPage(bodyContainer, utils.Must(gtk.LabelNew("Body")))
 	container.AppendPage(headersContainer, utils.Must(gtk.LabelNew("Headers")))
 	container.SetVExpand(true)
+
+	return container
+}
+
+func newBodyContainer(store *ContentStore) *gtk.Box {
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+	editor := utils.NewEditor(store.DraftRequest.Body, true)
+
+	editor.Buffer.Connect("changed", func() {
+		store.DraftRequest.Body = utils.Must(
+			editor.Buffer.GetText(editor.Buffer.GetStartIter(), editor.Buffer.GetEndIter(), true),
+		)
+	})
+
+	container.Add(editor)
 
 	return container
 }
@@ -149,29 +185,11 @@ func newResponseContainer(
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
 
-					bodyContainer.GetChildren().Foreach(func(item interface{}) {
-						item.(*gtk.Widget).Destroy()
-					})
-					headersContainer.GetChildren().Foreach(func(item interface{}) {
-						item.(*gtk.Widget).Destroy()
-					})
+					utils.ClearChildren(bodyContainer.Container)
 
-					bodyBuf := utils.Must(gtk.TextBufferNew(nil))
-					bodyBuf.SetText(response.Body)
-
-					bodyView := utils.Must(gtk.TextViewNewWithBuffer(bodyBuf))
-					bodyView.SetEditable(false)
-					bodyView.SetHExpand(true)
-
-					bodyScroll := utils.Must(gtk.ScrolledWindowNew(nil, nil))
-
-					bodyScroll.SetVExpand(true)
-					bodyScroll.Add(bodyView)
-
-					bodyContainer.Add(bodyScroll)
+					bodyContainer.Add(utils.NewEditor(response.Body, false))
 
 					bodyContainer.ShowAll()
-					headersContainer.ShowAll()
 				})
 			}
 		}
