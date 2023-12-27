@@ -65,18 +65,26 @@ func newRequestURLContainer(
 
 	sendBtn := utils.Must(gtk.ButtonNewWithLabel("Go"))
 	sendBtn.Connect("clicked", func() {
-		client := client.NewClient()
+		sendBtn.SetSensitive(false)
 
-		variables := make(map[string]string)
+		go func() {
+			client := client.NewClient()
+			variables := make(map[string]string)
 
-		for _, variable := range store.VarStore.List() {
-			variables[variable.Key] = variable.Value
-		}
+			for _, variable := range store.VarStore.List() {
+				variables[variable.Key] = variable.Value
+			}
 
-		res, err := client.Run(store.Request, variables)
-		// FIXME: proper error handling
-		utils.HandleErr(err)
-		store.ResponseCh <- res
+			res, err := client.Run(store.Request, variables)
+			// FIXME: proper error handling
+			utils.HandleErr(err)
+
+			glib.IdleAdd(func() {
+				sendBtn.SetSensitive(true)
+			})
+
+			store.ResponseCh <- res
+		}()
 	})
 
 	container.Add(methods)
