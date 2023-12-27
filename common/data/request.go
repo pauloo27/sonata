@@ -15,6 +15,15 @@ const (
 	BodyTypeText BodyType = "text"
 )
 
+var (
+	BodyTypeExtensions = map[BodyType]string{
+		BodyTypeNone: "",
+		BodyTypeJSON: "json",
+		BodyTypeForm: "form",
+		BodyTypeText: "txt",
+	}
+)
+
 type HTTPMethod string
 
 const (

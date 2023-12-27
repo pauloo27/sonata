@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/huh"
+	"github.com/pauloo27/sonata/cli/editor"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/spf13/cobra"
 )
@@ -62,7 +63,10 @@ var NewRequest = &cobra.Command{
 				panic(err)
 			}
 			if bodyType != data.BodyTypeNone {
-				huh.NewText().Title("Body").Value(&body).Run()
+				body, err = editor.ReadFromEditor(data.BodyTypeExtensions[bodyType])
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 
