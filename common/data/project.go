@@ -51,7 +51,7 @@ func loadProjectRequests(project *Project) error {
 	}
 
 	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".json") {
+		if !strings.HasSuffix(file.Name(), ".request.json") {
 			continue
 		}
 
@@ -70,7 +70,7 @@ func loadProjectRequests(project *Project) error {
 
 		request.path = path.Join(project.rootDir, file.Name())
 		request.p = project
-		request.Name = strings.TrimSuffix(file.Name(), ".json")
+		request.Name = strings.TrimSuffix(file.Name(), ".request.json")
 
 		project.requestMap[request.Name] = &request
 	}

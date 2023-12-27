@@ -68,7 +68,7 @@ func (p *Project) NewRequest(
 		Body:        bodyTemplate,
 		Version:     CurrentVersion,
 
-		path: fmt.Sprintf("%s/%s.json", p.rootDir, name),
+		path: fmt.Sprintf("%s/%s.request.json", p.rootDir, name),
 		p:    p,
 	}
 }
@@ -79,5 +79,5 @@ func (r *Request) Save() error {
 		return err
 	}
 
-	return os.WriteFile(fmt.Sprintf("%s/%s.json", r.p.rootDir, r.Name), data, 420)
+	return os.WriteFile(r.path, data, 420)
 }
