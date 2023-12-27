@@ -2,10 +2,13 @@ package command
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/glamour"
+	gloss "github.com/charmbracelet/lipgloss"
 	"github.com/pauloo27/sonata/common/client"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/spf13/cobra"
@@ -32,7 +35,7 @@ var Run = &cobra.Command{
 			panic(err)
 		}
 
-		name = strings.TrimSuffix(name, ".json")
+		name = strings.TrimSuffix(name, ".request.json")
 
 		request, found := project.GetRequest(name)
 		if !found {
@@ -47,30 +50,7 @@ var Run = &cobra.Command{
 			panic(err)
 		}
 
-		var sb strings.Builder
-		title := fmt.Sprintf("# Status code %d\n", res.StatusCode)
-
-		sb.WriteString(title)
-		sb.WriteString("```")
-
-		contentType := res.Headers.Get("Content-Type")
-
-		if strings.HasPrefix(contentType, "application/json") {
-			sb.WriteString("json")
-		}
-
-		sb.WriteString("\n")
-
-		sb.WriteString(res.Body)
-		sb.WriteString("\n```")
-
-		in := sb.String()
-
-		out, err := glamour.Render(in, "dark")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Print(out)
+		showRes(request, res)
 	},
 }
 
@@ -93,4 +73,57 @@ func parseRunVariables(keyValuePairs []string) map[string]string {
 	}
 
 	return variables
+}
+
+var (
+	keyStyle   = gloss.NewStyle().Foreground(gloss.Color("4"))
+	valueStyle = gloss.NewStyle().Foreground(gloss.Color("7"))
+	Success    = gloss.NewStyle().Foreground(gloss.Color("10")).Background(gloss.Color("0"))
+	Failure    = gloss.NewStyle().Foreground(gloss.Color("9")).Background(gloss.Color("0"))
+)
+
+func showRes(req *data.Request, res *client.Response) {
+	printField("Name", req.Name)
+	printField("URL", res.CalledURL)
+	printField("Method", string(req.Method))
+
+	statusCodeStyle := Failure
+	if res.StatusCode >= 100 && res.StatusCode < 300 {
+		statusCodeStyle = Success
+	}
+
+	printStyledField(
+		keyStyle.Render("Status Code"),
+		statusCodeStyle.Render(
+			fmt.Sprintf("%d %s", res.StatusCode, http.StatusText(res.StatusCode)),
+		),
+	)
+
+	printField("Took", res.Time.Truncate(time.Millisecond).String())
+
+	var sb strings.Builder
+	sb.WriteString("```")
+	contentType := res.Headers.Get("Content-Type")
+	if strings.HasPrefix(contentType, "application/json") {
+		sb.WriteString("json")
+	}
+	sb.WriteString("\n")
+	sb.WriteString(res.Body)
+	sb.WriteString("\n```")
+
+	in := sb.String()
+
+	out, err := glamour.Render(in, "dark")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print(out)
+}
+
+func printField(key string, value string) {
+	fmt.Printf("%s: %s\n", keyStyle.Render(key), valueStyle.Render(value))
+}
+
+func printStyledField(key string, value string) {
+	fmt.Printf("%s: %s\n", key, value)
 }

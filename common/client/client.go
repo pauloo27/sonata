@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pauloo27/sonata/common/data"
 )
@@ -12,6 +13,9 @@ type Response struct {
 	StatusCode int
 	Body       string
 	Headers    http.Header
+
+	CalledURL string
+	Time      time.Duration
 }
 
 type Client struct {
@@ -53,10 +57,14 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 		return nil, err
 	}
 
+	start := time.Now()
+
 	httpRes, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
+
+	took := time.Since(start)
 
 	var resBody string
 
@@ -71,8 +79,10 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 	defer httpRes.Body.Close()
 
 	return &Response{
+		CalledURL:  uri,
 		StatusCode: httpRes.StatusCode,
 		Body:       resBody,
 		Headers:    httpRes.Header,
+		Time:       took,
 	}, nil
 }
