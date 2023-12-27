@@ -4,10 +4,10 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-func ChooseFolder(parent *gtk.Window) string {
+func ChooseFolder(parent *gtk.Window, title string) string {
 
 	dialog := Must(gtk.FileChooserDialogNewWith2Buttons(
-		"Open project",
+		title,
 		parent,
 		gtk.FILE_CHOOSER_ACTION_OPEN,
 		"Open",

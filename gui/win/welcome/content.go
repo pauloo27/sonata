@@ -1,7 +1,10 @@
 package welcome
 
 import (
+	"path"
+
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
 	"github.com/pauloo27/sonata/gui/win/project"
 )
@@ -19,16 +22,41 @@ func newContentContainer(win *gtk.Window) *gtk.Box {
 	utils.AddCSSClass(sonataLbl.Widget, "welcome-title")
 
 	createNewBtn := utils.Must(gtk.ButtonNewWithLabel("Create new project"))
+	createNewBtn.Connect("clicked", func() {
+		selectedPath := utils.ChooseFolder(win, "Select project folder")
+		if selectedPath == "" {
+			return
+		}
 
-	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
-	openBtn.Connect("clicked", func() {
-		path := utils.ChooseFolder(win)
-		if path == "" {
+		name := path.Base(selectedPath)
+
+		p, err := data.NewProject(selectedPath, name)
+		if err != nil {
+			utils.ShowErrorDialog(win, "Failed to create project")
+			return
+		}
+
+		if err = p.Save(); err != nil {
+			utils.ShowErrorDialog(win, "Failed to save project")
 			return
 		}
 
 		swappingWindow = true
-		if ok := project.Start(path); ok {
+		if ok := project.Start(selectedPath); ok {
+			win.Destroy()
+		}
+		swappingWindow = false
+	})
+
+	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
+	openBtn.Connect("clicked", func() {
+		selectedPath := utils.ChooseFolder(win, "Open project")
+		if selectedPath == "" {
+			return
+		}
+
+		swappingWindow = true
+		if ok := project.Start(selectedPath); ok {
 			win.Destroy()
 		}
 		swappingWindow = false
