@@ -9,19 +9,21 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-func Start(path string) {
+func Start(path string) bool {
 	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 	win.SetTitle("Sonata")
 	win.SetDefaultSize(800, 600)
+
+	project, err := data.LoadProject(path)
+	if err != nil {
+		utils.ShowErrorDialog(win, fmt.Sprintf("Failed to load project: %s", path))
+		return false
+	}
 
 	_ = win.Connect("destroy", func() {
 		fmt.Println("Closed")
 		gtk.MainQuit()
 	})
-
-	// FIXME: proper error handler
-	project, err := data.LoadProject(path)
-	utils.HandleErr(err)
 
 	container := utils.Must(gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL))
 	container.SetPosition(200)
@@ -50,4 +52,5 @@ func Start(path string) {
 
 	win.Add(container)
 	win.ShowAll()
+	return true
 }

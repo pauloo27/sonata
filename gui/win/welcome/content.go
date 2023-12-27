@@ -22,9 +22,16 @@ func newContentContainer(win *gtk.Window) *gtk.Box {
 
 	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
 	openBtn.Connect("clicked", func() {
+		path := utils.ChooseFolder(win)
+		if path == "" {
+			return
+		}
+
 		swappingWindow = true
-		project.Start("/home/paulo/dev/sonata")
-		win.Close()
+		if ok := project.Start(path); ok {
+			win.Destroy()
+		}
+		swappingWindow = false
 	})
 
 	infoLabel := utils.Must(gtk.LabelNew("(eventually it will list recent projects here)"))
