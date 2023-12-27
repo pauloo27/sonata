@@ -25,3 +25,16 @@ func ShowErrorDialog(parent *gtk.Window, message string) {
 	_ = dialog.Run()
 	dialog.Destroy()
 }
+
+func ShowInfoDialog(parent *gtk.Window, message string) {
+	dialog := gtk.MessageDialogNew(
+		parent,
+		gtk.DIALOG_MODAL,
+		gtk.MESSAGE_INFO,
+		gtk.BUTTONS_OK,
+		message,
+	)
+
+	_ = dialog.Run()
+	dialog.Destroy()
+}

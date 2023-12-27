@@ -22,6 +22,13 @@ var (
 		BodyTypeForm: "form",
 		BodyTypeText: "txt",
 	}
+
+	BodyTypes = [...]BodyType{
+		BodyTypeNone,
+		BodyTypeJSON,
+		BodyTypeForm,
+		BodyTypeText,
+	}
 )
 
 type HTTPMethod string

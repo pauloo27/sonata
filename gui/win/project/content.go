@@ -13,24 +13,16 @@ type ContentStore struct {
 	SavedRequest *data.Request
 	DraftRequest *data.Request
 	VarStore     *VariablesStore
+	RequestCh    chan *data.Request
 	ResponseCh   chan *client.Response
 }
 
-func newContentContainer(request *data.Request) *gtk.Box {
+func newContentContainer(store *ContentStore) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
 	container.SetMarginTop(5)
 	container.SetMarginBottom(5)
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
-
-	draftRequest := request.Clone()
-
-	store := &ContentStore{
-		SavedRequest: request,
-		DraftRequest: draftRequest,
-		VarStore:     newVariablesStore(),
-		ResponseCh:   make(chan *client.Response, 2),
-	}
 
 	container.Add(newRequestURLContainer(store))
 
@@ -50,21 +42,21 @@ func newRequestURLContainer(
 ) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 
-	methods := utils.Must(gtk.ComboBoxTextNew())
+	methodsCombo := utils.Must(gtk.ComboBoxTextNew())
 
 	requestMethodIdx := 0
 
 	for i, method := range data.HTTPMethods {
-		methods.AppendText(string(method))
+		methodsCombo.AppendText(string(method))
 		if method == store.DraftRequest.Method {
 			requestMethodIdx = i
 		}
 	}
 
-	methods.SetActive(requestMethodIdx)
+	methodsCombo.SetActive(requestMethodIdx)
 
-	methods.Connect("changed", func() {
-		store.DraftRequest.Method = data.HTTPMethod(methods.GetActiveText())
+	methodsCombo.Connect("changed", func() {
+		store.DraftRequest.Method = data.HTTPMethod(methodsCombo.GetActiveText())
 	})
 
 	entry := utils.Must(gtk.EntryNew())
@@ -108,7 +100,7 @@ func newRequestURLContainer(
 		utils.HandleErr(err)
 	})
 
-	container.Add(methods)
+	container.Add(methodsCombo)
 	container.Add(entry)
 	container.Add(saveBtn)
 	container.Add(sendBtn)
