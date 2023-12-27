@@ -27,7 +27,7 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Run(req *data.Request, params map[string]string) (*Response, error) {
+func (c *Client) Run(req *data.Request, variables map[string]string) (*Response, error) {
 	uriTemplate := req.URL
 
 	var sb strings.Builder
@@ -39,7 +39,7 @@ func (c *Client) Run(req *data.Request, params map[string]string) (*Response, er
 			}).
 			Parse(uriTemplate),
 	).
-		Execute(&sb, params)
+		Execute(&sb, variables)
 	if err != nil {
 		return nil, err
 	}

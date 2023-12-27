@@ -17,17 +17,17 @@ func newContentContainer(request *data.Request) *gtk.Box {
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
-	paramsStore := newParametersStore()
+	varStore := newVariablesStore()
 	responseCh := make(chan *client.Response, 2)
 
-	container.Add(newRequestURLContainer(request, paramsStore, responseCh))
+	container.Add(newRequestURLContainer(request, varStore, responseCh))
 
 	subContainer, err := gtk.PanedNew(gtk.ORIENTATION_VERTICAL)
 	utils.HandleErr(err)
 
 	subContainer.SetPosition(500)
-	subContainer.Add1(newRequestStructureContainer(paramsStore))
-	subContainer.Add2(newResponseContainer(paramsStore, responseCh))
+	subContainer.Add1(newRequestStructureContainer(varStore))
+	subContainer.Add2(newResponseContainer(varStore, responseCh))
 
 	container.Add(subContainer)
 
@@ -37,7 +37,7 @@ func newContentContainer(request *data.Request) *gtk.Box {
 }
 
 func newRequestURLContainer(
-	request *data.Request, store *ParameterStore,
+	request *data.Request, store *VariablesStore,
 	responseCh chan *client.Response,
 ) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5)
@@ -70,13 +70,13 @@ func newRequestURLContainer(
 	sendBtn.Connect("clicked", func() {
 		client := client.NewClient()
 
-		params := make(map[string]string)
+		variables := make(map[string]string)
 
-		for _, param := range store.List() {
-			params[param.Key] = param.Value
+		for _, variable := range store.List() {
+			variables[variable.Key] = variable.Value
 		}
 
-		res, err := client.Run(request, params)
+		res, err := client.Run(request, variables)
 		utils.HandleErr(err)
 		responseCh <- res
 	})
@@ -90,7 +90,7 @@ func newRequestURLContainer(
 	return container
 }
 
-func newRequestStructureContainer(store *ParameterStore) *gtk.Notebook {
+func newRequestStructureContainer(store *VariablesStore) *gtk.Notebook {
 	container, err := gtk.NotebookNew()
 	utils.HandleErr(err)
 
@@ -119,7 +119,7 @@ func newRequestStructureContainer(store *ParameterStore) *gtk.Notebook {
 }
 
 func newResponseContainer(
-	store *ParameterStore, responseCh chan *client.Response,
+	store *VariablesStore, responseCh chan *client.Response,
 ) *gtk.Box {
 	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	utils.HandleErr(err)

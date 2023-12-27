@@ -5,19 +5,19 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-type ParameterStore struct {
-	parameters []*KeyValuePair
-	container  *gtk.Grid
+type VariablesStore struct {
+	variables []*KeyValuePair
+	container *gtk.Grid
 }
 
-func newParametersStore() *ParameterStore {
-	return &ParameterStore{
-		parameters: make([]*KeyValuePair, 0),
+func newVariablesStore() *VariablesStore {
+	return &VariablesStore{
+		variables: make([]*KeyValuePair, 0),
 	}
 }
 
-func (s *ParameterStore) Add(key, value string) {
-	s.parameters = append(s.parameters, &KeyValuePair{
+func (s *VariablesStore) Add(key, value string) {
+	s.variables = append(s.variables, &KeyValuePair{
 		Key:   key,
 		Value: value,
 	})
@@ -28,17 +28,17 @@ func (s *ParameterStore) Add(key, value string) {
 	s.container.ShowAll()
 }
 
-func (s *ParameterStore) Get(key string) string {
-	for _, parameter := range s.parameters {
-		if parameter.Key == key {
-			return parameter.Value
+func (s *VariablesStore) Get(key string) string {
+	for _, variable := range s.variables {
+		if variable.Key == key {
+			return variable.Value
 		}
 	}
 	return ""
 }
 
-func (s *ParameterStore) List() []*KeyValuePair {
-	return s.parameters
+func (s *VariablesStore) List() []*KeyValuePair {
+	return s.variables
 }
 
 type KeyValuePair struct {
@@ -46,7 +46,7 @@ type KeyValuePair struct {
 	Value string
 }
 
-func newParametersContainer(store *ParameterStore) *gtk.ScrolledWindow {
+func newParametersContainer(store *VariablesStore) *gtk.ScrolledWindow {
 	container, err := gtk.GridNew()
 	utils.HandleErr(err)
 
@@ -72,13 +72,13 @@ func newParametersContainer(store *ParameterStore) *gtk.ScrolledWindow {
 	return scrolledWindow
 }
 
-func showParameters(store *ParameterStore, container *gtk.Grid) {
+func showParameters(store *VariablesStore, container *gtk.Grid) {
 	lastRow := 0
-	for i, parameter := range store.List() {
+	for i, variable := range store.List() {
 		keyEntry, err := gtk.EntryNew()
 		utils.HandleErr(err)
 
-		parameterCopy := parameter
+		variableCopy := variable
 
 		keyEntry.SetPlaceholderText("Key")
 		keyEntry.SetHExpand(true)
@@ -89,18 +89,18 @@ func showParameters(store *ParameterStore, container *gtk.Grid) {
 		valueEntry.SetPlaceholderText("Value")
 		valueEntry.SetHExpand(true)
 
-		keyEntry.SetText(parameter.Key)
-		valueEntry.SetText(parameter.Value)
+		keyEntry.SetText(variable.Key)
+		valueEntry.SetText(variable.Value)
 
 		keyEntry.Connect("changed", func() {
 			var err error
-			parameterCopy.Key, err = keyEntry.GetText()
+			variableCopy.Key, err = keyEntry.GetText()
 			utils.HandleErr(err)
 		})
 
 		valueEntry.Connect("changed", func() {
 			var err error
-			parameterCopy.Value, err = valueEntry.GetText()
+			variableCopy.Value, err = valueEntry.GetText()
 			utils.HandleErr(err)
 		})
 

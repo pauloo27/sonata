@@ -39,10 +39,10 @@ var Run = &cobra.Command{
 			panic("Request not found")
 		}
 
-		params := parseRunParams(runKeyValuePairs)
+		variables := parseRunVariables(runKeyValuePairs)
 
 		client := client.NewClient()
-		res, err := client.Run(request, params)
+		res, err := client.Run(request, variables)
 		if err != nil {
 			panic(err)
 		}
@@ -76,12 +76,12 @@ var Run = &cobra.Command{
 
 func init() {
 	Run.Flags().StringSliceVarP(
-		&runKeyValuePairs, "params", "p", []string{}, "-p key=value -p key2=value2",
+		&runKeyValuePairs, "variables", "v", []string{}, "-v key=value -v key2=value2",
 	)
 }
 
-func parseRunParams(keyValuePairs []string) map[string]string {
-	params := make(map[string]string)
+func parseRunVariables(keyValuePairs []string) map[string]string {
+	variables := make(map[string]string)
 
 	for _, pair := range keyValuePairs {
 		splitted := strings.SplitN(pair, "=", 2)
@@ -89,8 +89,8 @@ func parseRunParams(keyValuePairs []string) map[string]string {
 		key := splitted[0]
 		value := splitted[1]
 
-		params[key] = value
+		variables[key] = value
 	}
 
-	return params
+	return variables
 }
