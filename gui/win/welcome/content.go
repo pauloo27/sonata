@@ -7,37 +7,27 @@ import (
 )
 
 func newContentContainer(win *gtk.Window) *gtk.Box {
-	contentContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
-
+	contentContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	contentContainer.SetVExpand(true)
 	contentContainer.SetHAlign(gtk.ALIGN_CENTER)
 	contentContainer.SetVAlign(gtk.ALIGN_CENTER)
 
-	welcomeLbl, err := gtk.LabelNew("Welcome to")
-	utils.HandleErr(err)
-
+	welcomeLbl := utils.Must(gtk.LabelNew("Welcome to"))
 	utils.AddCSSClass(welcomeLbl.Widget, "welcome-subtitle")
 
-	sonataLbl, err := gtk.LabelNew("💤 SONATA 💤")
-	utils.HandleErr(err)
-
+	sonataLbl := utils.Must(gtk.LabelNew("💤 SONATA 💤"))
 	utils.AddCSSClass(sonataLbl.Widget, "welcome-title")
 
-	createNewBtn, err := gtk.ButtonNewWithLabel("Create new project")
-	utils.HandleErr(err)
+	createNewBtn := utils.Must(gtk.ButtonNewWithLabel("Create new project"))
 
-	openBtn, err := gtk.ButtonNewWithLabel("Open project")
-	utils.HandleErr(err)
-
+	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
 	openBtn.Connect("clicked", func() {
 		swappingWindow = true
 		project.Start("/home/paulo/dev/sonata")
 		win.Close()
 	})
 
-	infoLabel, err := gtk.LabelNew("(eventually it will list recent projects here)")
-	utils.HandleErr(err)
+	infoLabel := utils.Must(gtk.LabelNew("(eventually it will list recent projects here)"))
 
 	contentContainer.PackStart(welcomeLbl, false, false, 5)
 	contentContainer.PackStart(sonataLbl, false, false, 5)

@@ -5,3 +5,8 @@ func HandleErr(err error) {
 		panic(err)
 	}
 }
+
+func Must[T any](val T, err error) T {
+	HandleErr(err)
+	return val
+}

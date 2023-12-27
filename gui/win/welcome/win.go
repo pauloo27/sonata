@@ -10,8 +10,7 @@ var (
 )
 
 func Start() {
-	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
-	utils.HandleErr(err)
+	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 
 	win.SetTitle("Sonata")
 	win.SetDefaultSize(800, 600)
@@ -22,7 +21,6 @@ func Start() {
 		}
 		gtk.MainQuit()
 	})
-	utils.HandleErr(err)
 
 	win.Add(newContentContainer(win))
 

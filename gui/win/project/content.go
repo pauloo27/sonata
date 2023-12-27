@@ -9,9 +9,7 @@ import (
 )
 
 func newContentContainer(request *data.Request) *gtk.Box {
-	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5)
-	utils.HandleErr(err)
-
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
 	container.SetMarginTop(5)
 	container.SetMarginBottom(5)
 	container.SetMarginStart(5)
@@ -22,15 +20,12 @@ func newContentContainer(request *data.Request) *gtk.Box {
 
 	container.Add(newRequestURLContainer(request, varStore, responseCh))
 
-	subContainer, err := gtk.PanedNew(gtk.ORIENTATION_VERTICAL)
-	utils.HandleErr(err)
-
+	subContainer := utils.Must(gtk.PanedNew(gtk.ORIENTATION_VERTICAL))
 	subContainer.SetPosition(500)
 	subContainer.Add1(newRequestStructureContainer(varStore))
 	subContainer.Add2(newResponseContainer(varStore, responseCh))
 
 	container.Add(subContainer)
-
 	container.SetHExpand(true)
 
 	return container
@@ -40,11 +35,9 @@ func newRequestURLContainer(
 	request *data.Request, store *VariablesStore,
 	responseCh chan *client.Response,
 ) *gtk.Box {
-	container, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5)
-	utils.HandleErr(err)
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 
-	methods, err := gtk.ComboBoxTextNew()
-	utils.HandleErr(err)
+	methods := utils.Must(gtk.ComboBoxTextNew())
 
 	requestMethodIdx := 0
 
@@ -57,16 +50,11 @@ func newRequestURLContainer(
 
 	methods.SetActive(requestMethodIdx)
 
-	entry, err := gtk.EntryNew()
-	utils.HandleErr(err)
-
+	entry := utils.Must(gtk.EntryNew())
 	entry.SetText(request.URL)
-
 	entry.SetHExpand(true)
 
-	sendBtn, err := gtk.ButtonNewWithLabel("Go")
-	utils.HandleErr(err)
-
+	sendBtn := utils.Must(gtk.ButtonNewWithLabel("Go"))
 	sendBtn.Connect("clicked", func() {
 		client := client.NewClient()
 
@@ -77,6 +65,7 @@ func newRequestURLContainer(
 		}
 
 		res, err := client.Run(request, variables)
+		// FIXME: proper error handling
 		utils.HandleErr(err)
 		responseCh <- res
 	})
@@ -91,28 +80,15 @@ func newRequestURLContainer(
 }
 
 func newRequestStructureContainer(store *VariablesStore) *gtk.Notebook {
-	container, err := gtk.NotebookNew()
-	utils.HandleErr(err)
-
-	bodyContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
-
-	headersContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
-
-	newLbl := func(label string) *gtk.Label {
-		lbl, err := gtk.LabelNew(label)
-		utils.HandleErr(err)
-
-		return lbl
-	}
+	container := utils.Must(gtk.NotebookNew())
+	bodyContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
 	parameterContainer := newParametersContainer(store)
 
-	container.AppendPage(parameterContainer, newLbl("Parameters"))
-	container.AppendPage(bodyContainer, newLbl("Body"))
-	container.AppendPage(headersContainer, newLbl("Headers"))
-
+	container.AppendPage(parameterContainer, utils.Must(gtk.LabelNew("Parameters")))
+	container.AppendPage(bodyContainer, utils.Must(gtk.LabelNew("Body")))
+	container.AppendPage(headersContainer, utils.Must(gtk.LabelNew("Headers")))
 	container.SetVExpand(true)
 
 	return container
@@ -121,17 +97,13 @@ func newRequestStructureContainer(store *VariablesStore) *gtk.Notebook {
 func newResponseContainer(
 	store *VariablesStore, responseCh chan *client.Response,
 ) *gtk.Box {
-	container, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
-	notebook, err := gtk.NotebookNew()
-	utils.HandleErr(err)
+	notebook := utils.Must(gtk.NotebookNew())
 
-	bodyContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
+	bodyContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
-	headersContainer, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-	utils.HandleErr(err)
+	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
 	newLbl := func(label string) *gtk.Label {
 		lbl, err := gtk.LabelNew(label)
@@ -145,12 +117,9 @@ func newResponseContainer(
 
 	notebook.AppendPage(bodyContainer, newLbl("Body"))
 	notebook.AppendPage(headersContainer, newLbl("Headers"))
-
 	notebook.SetVExpand(true)
 
-	title, err := gtk.LabelNew("Response")
-	utils.HandleErr(err)
-
+	title := utils.Must(gtk.LabelNew("Response"))
 	title.SetHAlign(gtk.ALIGN_CENTER)
 
 	container.Add(title)
@@ -162,6 +131,7 @@ func newResponseContainer(
 			if response != nil {
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
+
 					bodyContainer.GetChildren().Foreach(func(item interface{}) {
 						item.(*gtk.Widget).Destroy()
 					})
@@ -169,19 +139,14 @@ func newResponseContainer(
 						item.(*gtk.Widget).Destroy()
 					})
 
-					bodyBuf, err := gtk.TextBufferNew(nil)
-					utils.HandleErr(err)
-
+					bodyBuf := utils.Must(gtk.TextBufferNew(nil))
 					bodyBuf.SetText(response.Body)
 
-					bodyView, err := gtk.TextViewNewWithBuffer(bodyBuf)
-					utils.HandleErr(err)
-
+					bodyView := utils.Must(gtk.TextViewNewWithBuffer(bodyBuf))
 					bodyView.SetEditable(false)
 					bodyView.SetHExpand(true)
 
-					bodyScroll, err := gtk.ScrolledWindowNew(nil, nil)
-					utils.HandleErr(err)
+					bodyScroll := utils.Must(gtk.ScrolledWindowNew(nil, nil))
 
 					bodyScroll.SetVExpand(true)
 					bodyScroll.Add(bodyView)

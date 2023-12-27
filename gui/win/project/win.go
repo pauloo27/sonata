@@ -10,9 +10,7 @@ import (
 )
 
 func Start(path string) {
-	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
-	utils.HandleErr(err)
-
+	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 	win.SetTitle("Sonata")
 	win.SetDefaultSize(800, 600)
 
@@ -20,14 +18,12 @@ func Start(path string) {
 		fmt.Println("Closed")
 		gtk.MainQuit()
 	})
-	utils.HandleErr(err)
 
+	// FIXME: proper error handler
 	project, err := data.LoadProject(path)
 	utils.HandleErr(err)
 
-	container, err := gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL)
-	utils.HandleErr(err)
-
+	container := utils.Must(gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL))
 	container.SetPosition(200)
 
 	selectedRequest := make(chan *data.Request)
@@ -53,6 +49,5 @@ func Start(path string) {
 	}()
 
 	win.Add(container)
-
 	win.ShowAll()
 }
