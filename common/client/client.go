@@ -5,9 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"text/template"
-
-	"github.com/google/uuid"
 	"github.com/pauloo27/sonata/common/data"
 )
 
@@ -28,23 +25,30 @@ func NewClient() *Client {
 }
 
 func (c *Client) Run(req *data.Request, variables map[string]string) (*Response, error) {
-	uriTemplate := req.URL
-
-	var sb strings.Builder
-
-	err := template.Must(
-		template.New("url").
-			Funcs(template.FuncMap{
-				"randomUUID": randomUUID,
-			}).
-			Parse(uriTemplate),
-	).
-		Execute(&sb, variables)
+	uri, err := ExecuteTemplate(
+		"req-uri-tmpl",
+		req.URL,
+		variables,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	httpReq, err := http.NewRequest(string(req.Method), sb.String(), nil)
+	var bodyReader io.Reader
+
+	if req.Body != "" {
+		body, err := ExecuteTemplate(
+			"req-body-tmpl",
+			req.Body,
+			variables,
+		)
+		if err != nil {
+			return nil, err
+		}
+		bodyReader = strings.NewReader(body)
+	}
+
+	httpReq, err := http.NewRequest(string(req.Method), uri, bodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -54,25 +58,21 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 		return nil, err
 	}
 
-	var body string
+	var resBody string
 
 	if httpRes.Body != nil {
-		bodyData, err := io.ReadAll(httpRes.Body)
+		resBodyData, err := io.ReadAll(httpRes.Body)
 		if err != nil {
 			return nil, err
 		}
-		body = string(bodyData)
+		resBody = string(resBodyData)
 	}
 
 	defer httpRes.Body.Close()
 
 	return &Response{
 		StatusCode: httpRes.StatusCode,
-		Body:       body,
+		Body:       resBody,
 		Headers:    httpRes.Header,
 	}, nil
-}
-
-func randomUUID() string {
-	return uuid.New().String()
 }
