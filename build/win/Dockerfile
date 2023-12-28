@@ -20,4 +20,5 @@ RUN CGO_ENABLED=1 PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkg
 
 RUN mkdir ./dist
 RUN cp sonata-gui.exe dist
-RUN yes | cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin/* ./dist
+RUN cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin/* ./dist
+RUN cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/share ./dist/
