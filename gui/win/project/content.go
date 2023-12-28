@@ -156,6 +156,24 @@ func newRequestStructureContainer(store *ProjectStore) *gtk.Notebook {
 
 func newBodyContainer(store *ProjectStore) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+
+	bodyTypeLbl := utils.Must(gtk.LabelNew("Body type:"))
+
+	selectedBodyTypeIdx := 0
+
+	bodyTypeEntry := utils.Must(gtk.ComboBoxTextNew())
+	for i, bodyType := range data.BodyTypes {
+		bodyTypeEntry.AppendText(string(bodyType))
+		if bodyType == store.DraftRequest.BodyType {
+			selectedBodyTypeIdx = i
+		}
+	}
+
+	bodyTypeEntry.SetActive(selectedBodyTypeIdx)
+	bodyTypeEntry.Connect("changed", func() {
+		store.DraftRequest.BodyType = data.BodyType(bodyTypeEntry.GetActiveText())
+	})
+
 	editor := utils.NewEditor(store.DraftRequest.Body, true)
 
 	editor.Buffer.Connect("changed", func() {
@@ -164,6 +182,11 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 		)
 	})
 
+	bodyTypeContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
+	bodyTypeContainer.Add(bodyTypeLbl)
+	bodyTypeContainer.Add(bodyTypeEntry)
+
+	container.Add(bodyTypeContainer)
 	container.Add(editor)
 
 	return container
