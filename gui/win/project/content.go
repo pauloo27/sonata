@@ -17,6 +17,8 @@ func newContentContainer(store *ProjectStore) *gtk.Box {
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
+	store.ResponseCh = make(chan *client.Response, 2)
+
 	container.Add(newRequestNameContainer(store))
 	container.Add(newRequestURLContainer(store))
 

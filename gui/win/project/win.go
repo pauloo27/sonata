@@ -40,10 +40,9 @@ func Start(path string) bool {
 	container.SetPosition(300)
 
 	store := &ProjectStore{
-		Project:    project,
-		VarStore:   newVariablesStore(),
-		ResponseCh: make(chan *client.Response, 2),
-		RequestCh:  make(chan *data.Request, 2),
+		Project:   project,
+		VarStore:  newVariablesStore(),
+		RequestCh: make(chan *data.Request, 2),
 	}
 
 	contentContainer := newEmptyContentContainer()
