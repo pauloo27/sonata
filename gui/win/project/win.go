@@ -17,7 +17,7 @@ type ProjectStore struct {
 	VarStore      *VariablesStore
 	RequestCh     chan *data.Request
 	ResponseCh    chan *client.Response
-	ReloadSidebar func()
+	ReloadSidebar func(selectedRequest *data.Request)
 }
 
 func Start(path string) bool {

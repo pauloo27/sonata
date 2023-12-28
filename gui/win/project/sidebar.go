@@ -21,13 +21,13 @@ func newSidebar(store *ProjectStore) *gtk.Box {
 	container.Add(newSidebarHeader(store))
 	container.Add(utils.Scrollable(requestsContainer))
 
-	store.ReloadSidebar = func() {
+	store.ReloadSidebar = func(selectedRequest *data.Request) {
 		utils.ClearChildren(requestsContainer.Container)
-		appendRequests(store, requestsContainer)
+		appendRequests(store, requestsContainer, selectedRequest)
 		requestsContainer.ShowAll()
 	}
 
-	appendRequests(store, requestsContainer)
+	appendRequests(store, requestsContainer, nil)
 
 	return container
 }
@@ -96,7 +96,7 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 				return
 			}
 
-			store.ReloadSidebar()
+			store.ReloadSidebar(nil)
 		}()
 	})
 
@@ -113,7 +113,9 @@ var (
 	lastSelectedRequest *gtk.Button
 )
 
-func appendRequests(store *ProjectStore, container *gtk.Box) {
+func appendRequests(
+	store *ProjectStore, container *gtk.Box, selectedRequest *data.Request,
+) {
 	for _, req := range store.Project.ListRequests() {
 		requestContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 0))
 		requestContainer.SetHExpand(true)
@@ -122,6 +124,10 @@ func appendRequests(store *ProjectStore, container *gtk.Box) {
 		requestContainer.SetMarginStart(5)
 
 		selectRequestBtn := utils.Must(gtk.ButtonNewWithLabel(req.Name))
+		if selectedRequest != nil && selectedRequest.Name == req.Name {
+			selectRequestBtn.SetSensitive(false)
+			lastSelectedRequest = selectRequestBtn
+		}
 
 		reqCopy := req
 
@@ -154,7 +160,7 @@ func appendRequests(store *ProjectStore, container *gtk.Box) {
 				return
 			}
 
-			store.ReloadSidebar()
+			store.ReloadSidebar(nil)
 		})
 
 		requestContainer.PackEnd(deleteBtn, false, false, 5)

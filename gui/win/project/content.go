@@ -54,7 +54,7 @@ func newRequestNameContainer(store *ProjectStore) *gtk.Box {
 				return
 			}
 
-			store.ReloadSidebar()
+			store.ReloadSidebar(store.DraftRequest)
 			store.RequestCh <- store.DraftRequest
 		} else {
 			*store.SavedRequest = *store.DraftRequest
@@ -180,7 +180,7 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 		store.DraftRequest.BodyType = data.BodyType(bodyTypeEntry.GetActiveText())
 	})
 
-	editor := utils.NewEditor(store.DraftRequest.Body, true)
+	editor := utils.NewEditor(store.DraftRequest.Body, true, "json")
 
 	editor.Buffer.Connect("changed", func() {
 		store.DraftRequest.Body = utils.Must(
@@ -237,7 +237,7 @@ func newResponseContainer(
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
 					utils.ClearChildren(bodyContainer.Container)
-					bodyContainer.Add(utils.NewEditor(body, false))
+					bodyContainer.Add(utils.NewEditor(body, false, "json"))
 					bodyContainer.ShowAll()
 				})
 			}
