@@ -18,5 +18,6 @@ COPY gui ./gui
 
 RUN CGO_ENABLED=1 PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -v -o ./sonata-gui.exe -ldflags -H=windowsgui ./gui
 
-RUN mkdir dist && cp sonata-gui.exe dist
-RUN yes | cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin ./dist
+RUN mkdir ./dist
+RUN cp sonata-gui.exe dist
+RUN yes | cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin/* ./dist
