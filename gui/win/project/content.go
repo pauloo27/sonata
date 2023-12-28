@@ -1,6 +1,8 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/client"
@@ -115,7 +117,9 @@ func newRequestURLContainer(
 				variables[variable.Key] = variable.Value
 			}
 
+			fmt.Println("Running request...")
 			res, err := client.Run(store.DraftRequest, variables)
+			fmt.Println("Request finished", res == nil)
 			if err == nil {
 				store.ResponseCh <- res
 			} else {
@@ -227,13 +231,11 @@ func newResponseContainer(
 		for {
 			response := <-store.ResponseCh
 			if response != nil {
+				body := response.Body
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
-
 					utils.ClearChildren(bodyContainer.Container)
-
-					bodyContainer.Add(utils.NewEditor(response.Body, false))
-
+					bodyContainer.Add(utils.NewEditor(body, false))
 					bodyContainer.ShowAll()
 				})
 			}
