@@ -18,15 +18,6 @@ dist-gui:
 dist-cli:
 	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata ./cli/sonata
 
-.PHONY: cross-build
-cross-build:
-	docker build -f ./build/win/Dockerfile -t sonata-win .
-	docker rm -f sonata-win || true
-	docker run --rm --name sonata-win -d sonata-win:latest tail -f /dev/null
-	rm -rf ./dist
-	docker cp sonata-win:/root/go/src/sonata/dist ./dist
-	docker rm -f sonata-win
-
 .PHONY: run
 run: build
 	./sonata-gui
