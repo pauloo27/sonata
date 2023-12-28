@@ -8,22 +8,14 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-type ContentStore struct {
-	Project      *data.Project
-	SavedRequest *data.Request
-	DraftRequest *data.Request
-	VarStore     *VariablesStore
-	RequestCh    chan *data.Request
-	ResponseCh   chan *client.Response
-}
-
-func newContentContainer(store *ContentStore) *gtk.Box {
+func newContentContainer(store *ProjectStore) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
 	container.SetMarginTop(5)
 	container.SetMarginBottom(5)
 	container.SetMarginStart(5)
 	container.SetMarginEnd(5)
 
+	container.Add(newRequestNameContainer(store))
 	container.Add(newRequestURLContainer(store))
 
 	subContainer := utils.Must(gtk.PanedNew(gtk.ORIENTATION_VERTICAL))
@@ -37,8 +29,52 @@ func newContentContainer(store *ContentStore) *gtk.Box {
 	return container
 }
 
+func newRequestNameContainer(store *ProjectStore) *gtk.Box {
+	nameEntry := utils.Must(gtk.EntryNew())
+	nameEntry.SetText(store.DraftRequest.Name)
+	nameEntry.Connect("changed", func() {
+		store.DraftRequest.Name = utils.Must(nameEntry.GetText())
+	})
+
+	saveBtn := utils.Must(gtk.ButtonNewWithLabel("Save"))
+	saveBtn.Connect("clicked", func() {
+		if store.DraftRequest.Name != store.SavedRequest.Name {
+			err := store.DraftRequest.Rename(store.DraftRequest.Name)
+			if err != nil {
+				utils.ShowErrorDialog(nil, "Failed to rename request")
+				return
+			}
+
+			if err := store.Project.ReloadRequests(); err != nil {
+				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				return
+			}
+
+			store.ReloadSidebar()
+			store.RequestCh <- store.DraftRequest
+		} else {
+			*store.SavedRequest = *store.DraftRequest
+			err := store.SavedRequest.Save()
+			if err != nil {
+				utils.ShowErrorDialog(nil, "Failed to save request")
+				return
+			}
+		}
+	})
+
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
+	container.SetHExpand(true)
+
+	container.PackStart(nameEntry, true, true, 0)
+	container.PackEnd(saveBtn, false, false, 0)
+
+	container.SetMarginBottom(5)
+
+	return container
+}
+
 func newRequestURLContainer(
-	store *ContentStore,
+	store *ProjectStore,
 ) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 
@@ -93,16 +129,8 @@ func newRequestURLContainer(
 		}()
 	})
 
-	saveBtn := utils.Must(gtk.ButtonNewWithLabel("Save"))
-	saveBtn.Connect("clicked", func() {
-		*store.SavedRequest = *store.DraftRequest
-		err := store.SavedRequest.Save()
-		utils.HandleErr(err)
-	})
-
 	container.Add(methodsCombo)
 	container.Add(entry)
-	container.Add(saveBtn)
 	container.Add(sendBtn)
 
 	container.SetHExpand(true)
@@ -110,7 +138,7 @@ func newRequestURLContainer(
 	return container
 }
 
-func newRequestStructureContainer(store *ContentStore) *gtk.Notebook {
+func newRequestStructureContainer(store *ProjectStore) *gtk.Notebook {
 	container := utils.Must(gtk.NotebookNew())
 	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 
@@ -126,7 +154,7 @@ func newRequestStructureContainer(store *ContentStore) *gtk.Notebook {
 	return container
 }
 
-func newBodyContainer(store *ContentStore) *gtk.Box {
+func newBodyContainer(store *ProjectStore) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	editor := utils.NewEditor(store.DraftRequest.Body, true)
 
@@ -142,7 +170,7 @@ func newBodyContainer(store *ContentStore) *gtk.Box {
 }
 
 func newResponseContainer(
-	store *ContentStore,
+	store *ProjectStore,
 ) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 

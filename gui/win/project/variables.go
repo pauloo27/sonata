@@ -44,7 +44,7 @@ type KeyValuePair struct {
 	Value string
 }
 
-func newVariablesContainer(store *ContentStore) *gtk.ScrolledWindow {
+func newVariablesContainer(store *ProjectStore) *gtk.ScrolledWindow {
 	container, err := gtk.GridNew()
 	utils.HandleErr(err)
 

@@ -98,6 +98,21 @@ func (r *Request) Save() error {
 	return os.WriteFile(r.path, data, 420)
 }
 
+func (r *Request) Rename(newName string) error {
+	if err := os.Remove(r.path); err != nil {
+		return err
+	}
+
+	r.Name = newName
+	r.path = fmt.Sprintf("%s/%s.request.json", r.p.rootDir, newName)
+
+	return r.Save()
+}
+
+func (r *Request) Delete() error {
+	return os.Remove(r.path)
+}
+
 func (r *Request) Clone() *Request {
 	return &Request{
 		Name:        r.Name,

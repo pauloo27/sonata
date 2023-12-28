@@ -35,17 +35,18 @@ func LoadProject(rootDir string) (*Project, error) {
 	}
 
 	project.rootDir = rootDir
-	if err := loadProjectRequests(&project); err != nil {
+	if err := project.ReloadRequests(); err != nil {
 		return nil, err
 	}
 
 	return &project, nil
 }
 
-func loadProjectRequests(project *Project) error {
-	project.requestMap = make(map[string]*Request)
+func (p *Project) ReloadRequests() error {
+	p.requestMap = make(map[string]*Request)
+	p.requests = make([]*Request, 0)
 
-	files, err := os.ReadDir(project.rootDir)
+	files, err := os.ReadDir(p.rootDir)
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func loadProjectRequests(project *Project) error {
 			continue
 		}
 
-		data, err := os.ReadFile(path.Join(project.rootDir, file.Name()))
+		data, err := os.ReadFile(path.Join(p.rootDir, file.Name()))
 		if err != nil {
 			return err
 		}
@@ -66,13 +67,13 @@ func loadProjectRequests(project *Project) error {
 			return err
 		}
 
-		project.requests = append(project.requests, &request)
+		p.requests = append(p.requests, &request)
 
-		request.path = path.Join(project.rootDir, file.Name())
-		request.p = project
+		request.path = path.Join(p.rootDir, file.Name())
+		request.p = p
 		request.Name = strings.TrimSuffix(file.Name(), ".request.json")
 
-		project.requestMap[request.Name] = &request
+		p.requestMap[request.Name] = &request
 	}
 
 	return nil

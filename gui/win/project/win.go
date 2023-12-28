@@ -10,6 +10,16 @@ import (
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
+type ProjectStore struct {
+	Project       *data.Project
+	SavedRequest  *data.Request
+	DraftRequest  *data.Request
+	VarStore      *VariablesStore
+	RequestCh     chan *data.Request
+	ResponseCh    chan *client.Response
+	ReloadSidebar func()
+}
+
 func Start(path string) bool {
 	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 	win.SetTitle("Sonata")
@@ -27,9 +37,9 @@ func Start(path string) bool {
 	})
 
 	container := utils.Must(gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL))
-	container.SetPosition(200)
+	container.SetPosition(300)
 
-	store := &ContentStore{
+	store := &ProjectStore{
 		Project:    project,
 		VarStore:   newVariablesStore(),
 		ResponseCh: make(chan *client.Response, 2),
@@ -44,15 +54,25 @@ func Start(path string) bool {
 	go func() {
 		for {
 			request := <-store.RequestCh
-			draftRequest := request.Clone()
 
-			store.SavedRequest = request
-			store.DraftRequest = draftRequest
+			glib.IdleAdd(func() {
+				container.Remove(contentContainer)
+				contentContainer.Destroy()
+			})
 
-			if request != nil {
+			if request == nil {
 				glib.IdleAdd(func() {
-					container.Remove(contentContainer)
-					contentContainer.Destroy()
+					contentContainer = newEmptyContentContainer()
+					container.Add2(contentContainer)
+					container.ShowAll()
+				})
+			} else {
+				draftRequest := request.Clone()
+
+				store.SavedRequest = request
+				store.DraftRequest = draftRequest
+
+				glib.IdleAdd(func() {
 					contentContainer = newContentContainer(store)
 					container.Add2(contentContainer)
 					container.ShowAll()

@@ -1,37 +1,38 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
 )
 
-func newSidebar(store *ContentStore) *gtk.Box {
+func newSidebar(store *ProjectStore) *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	container.SetHExpand(true)
 
-	list := utils.Must(gtk.ListBoxNew())
-
-	for _, request := range store.Project.ListRequests() {
-		row := utils.Must(gtk.ListBoxRowNew())
-		row.Add(
-			utils.Must(gtk.LabelNew(request.Name)),
-		)
-		list.Add(row)
-	}
-
-	list.Connect("row-selected", func() {
-		store.RequestCh <- store.Project.
-			ListRequests()[list.GetSelectedRow().GetIndex()]
-	})
+	requestsContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+	requestsContainer.SetMarginTop(5)
+	requestsContainer.SetMarginBottom(5)
+	requestsContainer.SetMarginStart(5)
+	requestsContainer.SetMarginEnd(5)
 
 	container.Add(newSidebarHeader(store))
-	container.Add(list)
+	container.Add(utils.Scrollable(requestsContainer))
+
+	store.ReloadSidebar = func() {
+		utils.ClearChildren(requestsContainer.Container)
+		appendRequests(store, requestsContainer)
+		requestsContainer.ShowAll()
+	}
+
+	appendRequests(store, requestsContainer)
 
 	return container
 }
 
-func newSidebarHeader(store *ContentStore) *gtk.HeaderBar {
+func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	container := utils.Must(gtk.HeaderBarNew())
 	container.SetTitle("Sonata")
 
@@ -52,14 +53,51 @@ func newSidebarHeader(store *ContentStore) *gtk.HeaderBar {
 	settingsPopover.SetRelativeTo(settingsBtn)
 
 	// TODO: use MenuModel?
-	settingsContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
+	settingsContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 10))
+	settingsContainer.SetMarginTop(5)
+	settingsContainer.SetMarginBottom(5)
+	settingsContainer.SetMarginStart(5)
+	settingsContainer.SetMarginEnd(5)
+
 	settingsPopover.Add(settingsContainer)
 
 	newRequestBtn := utils.Must(gtk.ButtonNewWithLabel("New Request"))
 	aboutBtn := utils.Must(gtk.ButtonNewWithLabel("About"))
 
 	newRequestBtn.Connect("clicked", func() {
-		handleNewRequest(store)
+		go func() {
+			var requestName string
+
+			for i := 0; i < 100; i++ {
+				nameToCheck := fmt.Sprintf("New Request %d", i)
+				_, found := store.Project.GetRequest(nameToCheck)
+				if !found {
+					requestName = nameToCheck
+					break
+				}
+			}
+
+			req := store.Project.NewRequest(
+				requestName,
+				"",
+				data.HTTPMethodGet,
+				"",
+				data.BodyTypeJSON,
+				"",
+			)
+			err := req.Save()
+			if err != nil {
+				utils.ShowErrorDialog(nil, "Failed to create request")
+				return
+			}
+
+			if err := store.Project.ReloadRequests(); err != nil {
+				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				return
+			}
+
+			store.ReloadSidebar()
+		}()
 	})
 
 	settingsContainer.Add(newRequestBtn)
@@ -71,65 +109,56 @@ func newSidebarHeader(store *ContentStore) *gtk.HeaderBar {
 	return container
 }
 
-func handleNewRequest(store *ContentStore) {
-	dialog := utils.Must(gtk.DialogNew())
-	dialog.SetTitle("New Request")
+var (
+	lastSelectedRequest *gtk.Button
+)
 
-	dialog.AddButton("Cancel", gtk.RESPONSE_CANCEL)
-	dialog.AddButton("Create", gtk.RESPONSE_OK)
+func appendRequests(store *ProjectStore, container *gtk.Box) {
+	for _, req := range store.Project.ListRequests() {
+		requestContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 0))
+		requestContainer.SetHExpand(true)
+		requestContainer.SetMarginTop(5)
+		requestContainer.SetMarginBottom(5)
+		requestContainer.SetMarginStart(5)
 
-	dialog.SetDefaultResponse(gtk.RESPONSE_OK)
+		selectRequestBtn := utils.Must(gtk.ButtonNewWithLabel(req.Name))
 
-	content := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
-	content.SetMarginTop(5)
-	content.SetMarginBottom(5)
-	content.SetMarginStart(5)
-	content.SetMarginEnd(5)
+		reqCopy := req
 
-	nameEntry := utils.Must(gtk.EntryNew())
-	nameEntry.SetPlaceholderText("Name")
-	nameEntry.SetHExpand(true)
+		selectRequestBtn.Connect("clicked", func() {
+			if lastSelectedRequest != nil {
+				lastSelectedRequest.SetSensitive(true)
+			}
+			selectRequestBtn.SetSensitive(false)
+			lastSelectedRequest = selectRequestBtn
+			store.RequestCh <- reqCopy
+		})
 
-	urlEntry := utils.Must(gtk.EntryNew())
-	urlEntry.SetPlaceholderText("URL")
-	urlEntry.SetHExpand(true)
+		requestContainer.PackStart(selectRequestBtn, true, true, 5)
 
-	methodsCombo := utils.Must(gtk.ComboBoxTextNew())
-	for _, method := range data.HTTPMethods {
-		methodsCombo.AppendText(string(method))
-	}
-	methodsCombo.SetActive(0)
-
-	bodyTypeCombo := utils.Must(gtk.ComboBoxTextNew())
-	for _, bType := range data.BodyTypes {
-		bodyTypeCombo.AppendText(string(bType))
-	}
-	bodyTypeCombo.SetActive(0)
-
-	content.Add(nameEntry)
-	content.Add(urlEntry)
-	content.Add(methodsCombo)
-	content.Add(bodyTypeCombo)
-
-	utils.Must(dialog.GetContentArea()).Add(content)
-	dialog.ShowAll()
-
-	if dialog.Run() == gtk.RESPONSE_OK {
-		req := store.Project.NewRequest(
-			utils.Must(nameEntry.GetText()),
-			"",
-			data.HTTPMethod(methodsCombo.GetActiveText()),
-			utils.Must(urlEntry.GetText()),
-			data.BodyType(bodyTypeCombo.GetActiveText()),
-			"",
+		deleteBtn := utils.Must(
+			gtk.ButtonNewFromIconName("user-trash-symbolic", gtk.ICON_SIZE_BUTTON),
 		)
-		err := req.Save()
-		if err != nil {
-			utils.ShowErrorDialog(nil, "Failed to save request")
-			return
-		}
+		deleteBtn.Connect("clicked", func() {
+			if lastSelectedRequest == selectRequestBtn {
+				store.RequestCh <- nil
+				lastSelectedRequest = nil
+			}
+			if err := reqCopy.Delete(); err != nil {
+				utils.ShowErrorDialog(nil, "Failed to delete request")
+				return
+			}
 
-		// TODO: reload sidebar instead of begging for a restart
-		utils.ShowInfoDialog(nil, "PLEASE, RESTART ME")
+			if err := store.Project.ReloadRequests(); err != nil {
+				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				return
+			}
+
+			store.ReloadSidebar()
+		})
+
+		requestContainer.PackEnd(deleteBtn, false, false, 5)
+
+		container.PackStart(requestContainer, false, false, 5)
 	}
 }
