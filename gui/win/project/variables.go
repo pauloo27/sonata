@@ -16,6 +16,14 @@ func newVariablesStore() *VariablesStore {
 	}
 }
 
+func (s *VariablesStore) Delete(index int) {
+	s.variables = append(s.variables[:index], s.variables[index+1:]...)
+
+	utils.ClearChildren(s.container.Container)
+	showVariables(s, s.container)
+	s.container.ShowAll()
+}
+
 func (s *VariablesStore) Add(key, value string) {
 	s.variables = append(s.variables, &KeyValuePair{
 		Key:   key,
@@ -57,7 +65,7 @@ func newVariablesContainer(store *ProjectStore) *gtk.ScrolledWindow {
 
 	container.SetRowSpacing(5)
 	container.SetColumnSpacing(5)
-	container.SetColumnHomogeneous(true)
+	container.SetColumnHomogeneous(false)
 
 	store.VarStore.container = container
 	showVariables(store.VarStore, container)
@@ -77,6 +85,7 @@ func showVariables(varStore *VariablesStore, container *gtk.Grid) {
 		utils.HandleErr(err)
 
 		variableCopy := variable
+		idxCopy := i
 
 		keyEntry.SetPlaceholderText("Key")
 		keyEntry.SetHExpand(true)
@@ -90,6 +99,11 @@ func showVariables(varStore *VariablesStore, container *gtk.Grid) {
 		keyEntry.SetText(variable.Key)
 		valueEntry.SetText(variable.Value)
 
+		deleteBtn := utils.Must(gtk.ButtonNewFromIconName("user-trash-symbolic", gtk.ICON_SIZE_BUTTON))
+		deleteBtn.Connect("clicked", func() {
+			varStore.Delete(idxCopy)
+		})
+
 		keyEntry.Connect("changed", func() {
 			var err error
 			variableCopy.Key, err = keyEntry.GetText()
@@ -102,8 +116,9 @@ func showVariables(varStore *VariablesStore, container *gtk.Grid) {
 			utils.HandleErr(err)
 		})
 
-		container.Attach(keyEntry, 0, i, 1, 1)
-		container.Attach(valueEntry, 1, i, 1, 1)
+		container.Attach(keyEntry, 0, i, 3, 1)
+		container.Attach(valueEntry, 3, i, 3, 1)
+		container.Attach(deleteBtn, 6, i, 1, 1)
 
 		lastRow = i
 	}
