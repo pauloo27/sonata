@@ -66,10 +66,6 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	closeProjectBtn := utils.Must(gtk.ButtonNewWithLabel("Close Project"))
 	aboutBtn := utils.Must(gtk.ButtonNewWithLabel("About"))
 
-	closeProjectBtn.Connect("clicked", func() {
-		win.Replace("welcome")
-	})
-
 	newRequestBtn.Connect("clicked", func() {
 		go func() {
 			var requestName string
@@ -104,6 +100,23 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 
 			store.ReloadSidebar(nil)
 		}()
+	})
+
+	closeProjectBtn.Connect("clicked", func() {
+		win.Replace("welcome")
+	})
+
+	aboutBtn.Connect("clicked", func() {
+		dialog := utils.Must(gtk.AboutDialogNew())
+		dialog.SetProgramName("Sonata")
+		dialog.SetTitle("About Sonata")
+		dialog.SetComments("A stupid file-based REST client made with Go and GTK")
+		dialog.SetVersion(data.CurrentVersion)
+		dialog.SetLogoIconName("face-yawn-symbolic")
+		dialog.SetCopyright("2023 The Sonata Sleepy Dev Team")
+		dialog.SetTranslatorCredits("No one")
+
+		_ = dialog.Run()
 	})
 
 	settingsContainer.Add(newRequestBtn)
