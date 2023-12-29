@@ -3,12 +3,12 @@ package command
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/glamour"
 	gloss "github.com/charmbracelet/lipgloss"
+	"github.com/pauloo27/sonata/cli/utils"
 	"github.com/pauloo27/sonata/common/client"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/spf13/cobra"
@@ -24,17 +24,12 @@ var Run = &cobra.Command{
 	Long:  "Run a request",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		project, err := utils.LoadProject()
+		if err != nil {
+			panic(err)
+		}
+
 		name := strings.Join(args, " ")
-		dir, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-
-		project, err := data.LoadProject(dir)
-		if err != nil {
-			panic(err)
-		}
-
 		name = strings.TrimSuffix(name, ".request.json")
 
 		request, found := project.GetRequest(name)

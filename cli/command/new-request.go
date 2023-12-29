@@ -1,10 +1,9 @@
 package command
 
 import (
-	"os"
-
 	"github.com/charmbracelet/huh"
 	"github.com/pauloo27/sonata/cli/editor"
+	"github.com/pauloo27/sonata/cli/utils"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/spf13/cobra"
 )
@@ -15,12 +14,7 @@ var NewRequest = &cobra.Command{
 	Long:  "Create a new request in interactive mode",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		dir, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-
-		project, err := data.LoadProject(dir)
+		project, err := utils.LoadProject()
 		if err != nil {
 			panic(err)
 		}
