@@ -6,6 +6,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
+	"github.com/pauloo27/sonata/gui/win"
 )
 
 func newSidebar(store *ProjectStore) *gtk.Box {
@@ -62,7 +63,12 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	settingsPopover.Add(settingsContainer)
 
 	newRequestBtn := utils.Must(gtk.ButtonNewWithLabel("New Request"))
+	closeProjectBtn := utils.Must(gtk.ButtonNewWithLabel("Close Project"))
 	aboutBtn := utils.Must(gtk.ButtonNewWithLabel("About"))
+
+	closeProjectBtn.Connect("clicked", func() {
+		win.Replace("welcome")
+	})
 
 	newRequestBtn.Connect("clicked", func() {
 		go func() {
@@ -87,12 +93,12 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 			)
 			err := req.Save()
 			if err != nil {
-				utils.ShowErrorDialog(nil, "Failed to create request")
+				utils.ShowErrorDialog(store.Window, "Failed to create request")
 				return
 			}
 
 			if err := store.Project.ReloadRequests(); err != nil {
-				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				utils.ShowErrorDialog(store.Window, "Failed to reload requests")
 				return
 			}
 
@@ -101,6 +107,7 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	})
 
 	settingsContainer.Add(newRequestBtn)
+	settingsContainer.Add(closeProjectBtn)
 	settingsContainer.Add(aboutBtn)
 	settingsContainer.ShowAll()
 
@@ -151,12 +158,12 @@ func appendRequests(
 				lastSelectedRequest = nil
 			}
 			if err := reqCopy.Delete(); err != nil {
-				utils.ShowErrorDialog(nil, "Failed to delete request")
+				utils.ShowErrorDialog(store.Window, "Failed to delete request")
 				return
 			}
 
 			if err := store.Project.ReloadRequests(); err != nil {
-				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				utils.ShowErrorDialog(store.Window, "Failed to reload requests")
 				return
 			}
 

@@ -1,15 +1,16 @@
 package welcome
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
-	"github.com/pauloo27/sonata/gui/win/project"
+	"github.com/pauloo27/sonata/gui/win"
 )
 
-func newContentContainer(win *gtk.Window) *gtk.Box {
+func newContentContainer(gtkWin *gtk.Window) *gtk.Box {
 	contentContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	contentContainer.SetVExpand(true)
 	contentContainer.SetHAlign(gtk.ALIGN_CENTER)
@@ -23,7 +24,7 @@ func newContentContainer(win *gtk.Window) *gtk.Box {
 
 	createNewBtn := utils.Must(gtk.ButtonNewWithLabel("Create new project"))
 	createNewBtn.Connect("clicked", func() {
-		selectedPath := utils.ChooseFolder(win, "Select project folder")
+		selectedPath := utils.ChooseFolder(gtkWin, "Select project folder")
 		if selectedPath == "" {
 			return
 		}
@@ -32,34 +33,37 @@ func newContentContainer(win *gtk.Window) *gtk.Box {
 
 		p, err := data.NewProject(selectedPath, name)
 		if err != nil {
-			utils.ShowErrorDialog(win, "Failed to create project")
+			utils.ShowErrorDialog(gtkWin, "Failed to create project")
 			return
 		}
 
 		if err = p.Save(); err != nil {
-			utils.ShowErrorDialog(win, "Failed to save project")
+			utils.ShowErrorDialog(gtkWin, "Failed to save project")
 			return
 		}
 
-		swappingWindow = true
-		if ok := project.Start(selectedPath); ok {
-			win.Destroy()
-		}
-		swappingWindow = false
+		win.Replace("project", selectedPath)
 	})
 
 	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
 	openBtn.Connect("clicked", func() {
-		selectedPath := utils.ChooseFolder(win, "Open project")
+		selectedPath := utils.ChooseFolder(gtkWin, "Open project")
 		if selectedPath == "" {
 			return
 		}
 
-		swappingWindow = true
-		if ok := project.Start(selectedPath); ok {
-			win.Destroy()
+		project, err := data.LoadProject(selectedPath)
+		if err != nil {
+			utils.ShowErrorDialog(
+				gtkWin, fmt.Sprintf(
+					"Failed to load project: %s",
+					selectedPath,
+				),
+			)
+			return
 		}
-		swappingWindow = false
+
+		win.Replace("project", project)
 	})
 
 	infoLabel := utils.Must(gtk.LabelNew("(eventually it will list recent projects here)"))

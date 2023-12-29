@@ -3,26 +3,25 @@ package welcome
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/gui/utils"
+	"github.com/pauloo27/sonata/gui/win"
 )
 
-var (
-	swappingWindow bool
-)
-
-func Start() {
-	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
-
-	win.SetTitle("Sonata")
-	win.SetDefaultSize(800, 600)
-
-	_ = win.Connect("destroy", func() {
-		if swappingWindow {
-			return
-		}
-		gtk.MainQuit()
+func init() {
+	win.AddWindow("welcome", &win.SonataWindow{
+		Start: Start,
 	})
+}
 
-	win.Add(newContentContainer(win))
+func Start(...interface{}) *gtk.Window {
+	gtkWin := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 
-	win.ShowAll()
+	gtkWin.SetTitle("Sonata")
+	gtkWin.SetDefaultSize(800, 600)
+
+	_ = gtkWin.Connect("destroy", win.HandleClose)
+
+	gtkWin.Add(newContentContainer(gtkWin))
+
+	gtkWin.ShowAll()
+	return gtkWin
 }

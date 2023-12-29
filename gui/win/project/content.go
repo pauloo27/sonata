@@ -45,12 +45,12 @@ func newRequestNameContainer(store *ProjectStore) *gtk.Box {
 		if store.DraftRequest.Name != store.SavedRequest.Name {
 			err := store.DraftRequest.Rename(store.DraftRequest.Name)
 			if err != nil {
-				utils.ShowErrorDialog(nil, "Failed to rename request")
+				utils.ShowErrorDialog(store.Window, "Failed to rename request")
 				return
 			}
 
 			if err := store.Project.ReloadRequests(); err != nil {
-				utils.ShowErrorDialog(nil, "Failed to reload requests")
+				utils.ShowErrorDialog(store.Window, "Failed to reload requests")
 				return
 			}
 
@@ -60,7 +60,7 @@ func newRequestNameContainer(store *ProjectStore) *gtk.Box {
 			*store.SavedRequest = *store.DraftRequest
 			err := store.SavedRequest.Save()
 			if err != nil {
-				utils.ShowErrorDialog(nil, "Failed to save request")
+				utils.ShowErrorDialog(store.Window, "Failed to save request")
 				return
 			}
 		}
@@ -125,7 +125,7 @@ func newRequestURLContainer(
 			if err == nil {
 				store.ResponseCh <- res
 			} else {
-				handleRequestError(err)
+				handleRequestError(store, err)
 			}
 
 			glib.IdleAdd(func() {
@@ -265,9 +265,6 @@ func newEmptyContentContainer() *gtk.Box {
 	return container
 }
 
-func handleRequestError(err error) {
-	utils.ShowErrorDialog(
-		nil, // FIXME?
-		err.Error(),
-	)
+func handleRequestError(store *ProjectStore, err error) {
+	utils.ShowErrorDialog(store.Window, err.Error())
 }

@@ -1,14 +1,19 @@
 package project
 
 import (
-	"fmt"
-
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/client"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
+	"github.com/pauloo27/sonata/gui/win"
 )
+
+func init() {
+	win.AddWindow("project", &win.SonataWindow{
+		Start: Start,
+	})
+}
 
 type ProjectStore struct {
 	Project       *data.Project
@@ -18,32 +23,27 @@ type ProjectStore struct {
 	RequestCh     chan *data.Request
 	ResponseCh    chan *client.Response
 	ReloadSidebar func(selectedRequest *data.Request)
+	Window        *gtk.Window
 }
 
-func Start(path string) bool {
-	win := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
-	win.SetTitle("Sonata")
-	win.SetDefaultSize(800, 600)
+func Start(params ...interface{}) *gtk.Window {
+	gtkWin := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
+	gtkWin.SetTitle("Sonata")
+	gtkWin.SetDefaultSize(800, 600)
 
-	project, err := data.LoadProject(path)
-	if err != nil {
-		utils.ShowErrorDialog(win, fmt.Sprintf("Failed to load project: %s", path))
-		return false
-	}
-
-	_ = win.Connect("destroy", func() {
-		fmt.Println("Closed")
-		gtk.MainQuit()
-	})
+	project := params[0].(*data.Project)
 
 	container := utils.Must(gtk.PanedNew(gtk.ORIENTATION_HORIZONTAL))
 	container.SetPosition(300)
 
 	store := &ProjectStore{
+		Window:    gtkWin,
 		Project:   project,
 		VarStore:  newVariablesStore(),
 		RequestCh: make(chan *data.Request, 2),
 	}
+
+	_ = gtkWin.Connect("destroy", win.HandleClose)
 
 	contentContainer := newEmptyContentContainer()
 
@@ -80,7 +80,8 @@ func Start(path string) bool {
 		}
 	}()
 
-	win.Add(container)
-	win.ShowAll()
-	return true
+	gtkWin.Add(container)
+	gtkWin.ShowAll()
+
+	return gtkWin
 }
