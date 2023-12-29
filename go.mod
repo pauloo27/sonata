@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/gotk3/gotk3 v0.6.2
 	github.com/gotk3/sourceview v0.0.0-20200523170151-58bbfa485ab5
+	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.8.0
 )
 

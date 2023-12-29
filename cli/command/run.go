@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	gloss "github.com/charmbracelet/lipgloss"
+	"github.com/joho/godotenv"
 	"github.com/pauloo27/sonata/cli/utils"
 	"github.com/pauloo27/sonata/common/client"
 	"github.com/pauloo27/sonata/common/data"
@@ -16,6 +17,7 @@ import (
 
 var (
 	runKeyValuePairs []string
+	envs             []string
 )
 
 var Run = &cobra.Command{
@@ -37,6 +39,13 @@ var Run = &cobra.Command{
 			panic("Request not found")
 		}
 
+		for _, env := range envs {
+			err := godotenv.Load(env)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		variables := parseRunVariables(runKeyValuePairs)
 
 		client := client.NewClient()
@@ -52,6 +61,9 @@ var Run = &cobra.Command{
 func init() {
 	Run.Flags().StringSliceVarP(
 		&runKeyValuePairs, "variables", "v", []string{}, "-v key=value -v key2=value2",
+	)
+	Run.Flags().StringSliceVarP(
+		&envs, "env", "e", []string{}, "-e .env",
 	)
 }
 
