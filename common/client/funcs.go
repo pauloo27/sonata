@@ -3,9 +3,14 @@ package client
 import (
 	"html"
 	"net/url"
+	"os"
 	"text/template"
 
 	"github.com/google/uuid"
+)
+
+var (
+	GetEnv = os.Getenv
 )
 
 var (
@@ -14,6 +19,7 @@ var (
 		"queryEscape": queryEscape,
 		"pathEscape":  pathEscape,
 		"htmlEscape":  htmlEscape,
+		"env":         env,
 	}
 )
 
@@ -31,4 +37,15 @@ func pathEscape(s string) string {
 
 func htmlEscape(s string) string {
 	return html.EscapeString(s)
+}
+
+func env(s string) string {
+	return GetEnv(s)
+}
+
+func orDefault(s string, defaultValue string) string {
+	if s == "" {
+		return defaultValue
+	}
+	return s
 }
