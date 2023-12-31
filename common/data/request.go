@@ -84,7 +84,7 @@ func (p *Project) NewRequest(
 		Body:        bodyTemplate,
 		Version:     CurrentVersion,
 
-		path: fmt.Sprintf("%s/%s.request.json", p.rootDir, name),
+		path: fmt.Sprintf("%s/%s.request.json", p.RootDir, name),
 		p:    p,
 	}
 }
@@ -104,7 +104,7 @@ func (r *Request) Rename(newName string) error {
 	}
 
 	r.Name = newName
-	r.path = fmt.Sprintf("%s/%s.request.json", r.p.rootDir, newName)
+	r.path = fmt.Sprintf("%s/%s.request.json", r.p.RootDir, newName)
 
 	return r.Save()
 }

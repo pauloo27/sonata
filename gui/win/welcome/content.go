@@ -106,19 +106,21 @@ func newRecentProjectsContainer(parent *gtk.Window) *gtk.Box {
 	for _, projectPath := range recentProjectsPath {
 		projectBtn := utils.Must(gtk.ButtonNewWithLabel(projectPath))
 
+		projectPathCopy := projectPath
+
 		projectBtn.Connect("clicked", func() {
-			project, err := data.LoadProject(projectPath)
+			project, err := data.LoadProject(projectPathCopy)
 			if err != nil {
 				utils.ShowErrorDialog(
 					parent, fmt.Sprintf(
 						"Failed to load project: %s",
-						projectPath,
+						projectPathCopy,
 					),
 				)
 				return
 			}
 
-			err = addProjectToRecent(projectPath)
+			err = addProjectToRecent(projectPathCopy)
 			if err != nil {
 				utils.ShowErrorDialog(parent, "Failed to update project to recents")
 			}

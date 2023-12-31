@@ -15,7 +15,7 @@ type Project struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 
-	rootDir string `json:"-"`
+	RootDir string `json:"-"`
 
 	requests   []*Request          `json:"-"`
 	requestMap map[string]*Request `json:"-"`
@@ -34,7 +34,7 @@ func LoadProject(rootDir string) (*Project, error) {
 		return nil, err
 	}
 
-	project.rootDir = rootDir
+	project.RootDir = rootDir
 	if err := project.ReloadRequests(); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (p *Project) ReloadRequests() error {
 	p.requestMap = make(map[string]*Request)
 	p.requests = make([]*Request, 0)
 
-	files, err := os.ReadDir(p.rootDir)
+	files, err := os.ReadDir(p.RootDir)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (p *Project) ReloadRequests() error {
 			continue
 		}
 
-		data, err := os.ReadFile(path.Join(p.rootDir, file.Name()))
+		data, err := os.ReadFile(path.Join(p.RootDir, file.Name()))
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func (p *Project) ReloadRequests() error {
 
 		p.requests = append(p.requests, &request)
 
-		request.path = path.Join(p.rootDir, file.Name())
+		request.path = path.Join(p.RootDir, file.Name())
 		request.p = p
 		request.Name = strings.TrimSuffix(file.Name(), ".request.json")
 
@@ -83,7 +83,7 @@ func NewProject(rootDir string, name string) (*Project, error) {
 	project := Project{
 		Name:    name,
 		Version: CurrentVersion,
-		rootDir: rootDir,
+		RootDir: rootDir,
 	}
 
 	return &project, nil
@@ -95,7 +95,7 @@ func (p *Project) Save() error {
 		return err
 	}
 
-	return os.WriteFile(path.Join(p.rootDir, "sonata.json"), data, 420)
+	return os.WriteFile(path.Join(p.RootDir, "sonata.json"), data, 420)
 }
 
 func (p *Project) GetRequest(name string) (*Request, bool) {
@@ -105,4 +105,23 @@ func (p *Project) GetRequest(name string) (*Request, bool) {
 
 func (p *Project) ListRequests() []*Request {
 	return p.requests
+}
+
+func (p *Project) ListEnvironments() ([]string, error) {
+	entries, err := os.ReadDir(p.RootDir)
+	if err != nil {
+		return nil, err
+	}
+
+	environments := make([]string, 0, len(entries))
+
+	for _, entry := range entries {
+		if !strings.HasSuffix(entry.Name(), ".env") {
+			continue
+		}
+
+		environments = append(environments, entry.Name())
+	}
+
+	return environments, nil
 }
