@@ -1,13 +1,22 @@
 package welcome
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"os"
 	"path"
+	"strings"
 
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
 	"github.com/pauloo27/sonata/gui/win"
+)
+
+const (
+	recentProjectsPath = "$HOME/.cache/sonata/recent_projects"
+	maxRecentProjects  = 5
 )
 
 func newContentContainer(gtkWin *gtk.Window) *gtk.Box {
@@ -31,18 +40,23 @@ func newContentContainer(gtkWin *gtk.Window) *gtk.Box {
 
 		name := path.Base(selectedPath)
 
-		p, err := data.NewProject(selectedPath, name)
+		project, err := data.NewProject(selectedPath, name)
 		if err != nil {
 			utils.ShowErrorDialog(gtkWin, "Failed to create project")
 			return
 		}
 
-		if err = p.Save(); err != nil {
+		if err = project.Save(); err != nil {
 			utils.ShowErrorDialog(gtkWin, "Failed to save project")
 			return
 		}
 
-		win.Replace("project", selectedPath)
+		err = addProjectToRecent(selectedPath)
+		if err != nil {
+			utils.ShowErrorDialog(gtkWin, "Failed to add project to recents")
+		}
+
+		win.Replace("project", project)
 	})
 
 	openBtn := utils.Must(gtk.ButtonNewWithLabel("Open project"))
@@ -63,16 +77,129 @@ func newContentContainer(gtkWin *gtk.Window) *gtk.Box {
 			return
 		}
 
+		err = addProjectToRecent(selectedPath)
+		if err != nil {
+			utils.ShowErrorDialog(gtkWin, "Failed to add project to recents")
+		}
 		win.Replace("project", project)
 	})
-
-	infoLabel := utils.Must(gtk.LabelNew("(eventually it will list recent projects here)"))
 
 	contentContainer.PackStart(welcomeLbl, false, false, 5)
 	contentContainer.PackStart(sonataLbl, false, false, 5)
 	contentContainer.PackStart(createNewBtn, false, false, 5)
 	contentContainer.PackStart(openBtn, false, false, 5)
-	contentContainer.PackStart(infoLabel, false, false, 0)
+	contentContainer.PackStart(newRecentProjectsContainer(gtkWin), false, false, 0)
 
 	return contentContainer
+}
+
+func newRecentProjectsContainer(parent *gtk.Window) *gtk.Box {
+	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 5))
+
+	container.PackStart(
+		utils.Must(gtk.LabelNew("Recent projects:")),
+		false, false, 5,
+	)
+
+	recentProjectsPath := listRecentProjects()
+
+	for _, projectPath := range recentProjectsPath {
+		projectBtn := utils.Must(gtk.ButtonNewWithLabel(projectPath))
+
+		projectBtn.Connect("clicked", func() {
+			project, err := data.LoadProject(projectPath)
+			if err != nil {
+				utils.ShowErrorDialog(
+					parent, fmt.Sprintf(
+						"Failed to load project: %s",
+						projectPath,
+					),
+				)
+				return
+			}
+
+			err = addProjectToRecent(projectPath)
+			if err != nil {
+				utils.ShowErrorDialog(parent, "Failed to update project to recents")
+			}
+			win.Replace("project", project)
+		})
+
+		container.PackStart(projectBtn, false, false, 0)
+	}
+
+	return container
+}
+
+func listRecentProjects() []string {
+	finalPath := os.ExpandEnv(recentProjectsPath)
+
+	file, err := os.OpenFile(finalPath, os.O_RDONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	var projects []string
+
+	for i := 0; i < maxRecentProjects; i++ {
+		data, _, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+		line := string(data)
+		if line == "" {
+			continue
+		}
+
+		projects = append(projects, line)
+	}
+
+	return projects
+}
+
+func addProjectToRecent(projectPath string) error {
+	file, err := os.OpenFile(
+		os.ExpandEnv(recentProjectsPath),
+		os.O_RDWR|os.O_CREATE, 0644,
+	)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(data), "\n")
+
+	newRecentProjectFile := strings.Builder{}
+
+	counter := 1
+	newRecentProjectFile.WriteString(projectPath + "\n")
+
+	for _, line := range lines {
+		if line == projectPath || line == "" {
+			continue
+		}
+		newRecentProjectFile.WriteString(line + "\n")
+		counter++
+
+		if counter >= maxRecentProjects {
+			break
+		}
+	}
+
+	if err = file.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err = file.Seek(0, 0); err != nil {
+		return err
+	}
+	_, err = file.WriteString(newRecentProjectFile.String())
+	return err
 }
