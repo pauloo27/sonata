@@ -1,21 +1,23 @@
 # 0.1.0
 
-- edit request headers
 - show response headers
-- support text form body type
+- edit request headers
 - support form body type
-- simple README.md
+
 - store/load variables in request file
-- edit env window
 - create new env
+- edit env window
+- simple README.md
+
+- cli: create headers
 
 # Backlog
 
 - delete button in recent projects listing
 - "create project" with option to create .gitignore and readme.md
 - magik tool for "finding the variables"
+- magik tool for formatting json
 - support folders
-- better sidebar listing
 - request tabs
-- better UX for "Save"
 - response overview tab
+- cli: sonata edit <stuff>

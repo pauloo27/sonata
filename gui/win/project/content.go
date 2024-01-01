@@ -5,6 +5,7 @@ import (
 
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/gotk3/sourceview"
 	"github.com/pauloo27/sonata/common/client"
 	"github.com/pauloo27/sonata/common/data"
 	"github.com/pauloo27/sonata/gui/utils"
@@ -175,12 +176,42 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 		}
 	}
 
+	var editor *utils.Editor
+
+	if store.DraftRequest.BodyType != data.BodyTypeNone {
+		editor = utils.NewEditor(
+			store.DraftRequest.Body,
+			true,
+			data.BodyTypeExtensions[store.DraftRequest.BodyType],
+		)
+	}
+
 	bodyTypeEntry.SetActive(selectedBodyTypeIdx)
 	bodyTypeEntry.Connect("changed", func() {
-		store.DraftRequest.BodyType = data.BodyType(bodyTypeEntry.GetActiveText())
-	})
+		newBodyType := data.BodyType(bodyTypeEntry.GetActiveText())
+		store.DraftRequest.BodyType = newBodyType
 
-	editor := utils.NewEditor(store.DraftRequest.Body, true, "json")
+		if newBodyType == data.BodyTypeNone {
+			editor.Destroy()
+			editor = nil
+			return
+		}
+		if editor == nil {
+			editor = utils.NewEditor(
+				store.DraftRequest.Body,
+				true,
+				data.BodyTypeExtensions[store.DraftRequest.BodyType],
+			)
+			container.Add(editor)
+			editor.ShowAll()
+		}
+
+		ext := data.BodyTypeExtensions[store.DraftRequest.BodyType]
+		lang, _ := utils.Must(sourceview.SourceLanguageManagerGetDefault()).
+			GetLanguage(ext)
+
+		editor.Buffer.SetLanguage(lang)
+	})
 
 	editor.Buffer.Connect("changed", func() {
 		store.DraftRequest.Body = utils.Must(
