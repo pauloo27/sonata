@@ -99,9 +99,21 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 
 	topBar := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 
+	editEnvBtn := utils.Must(
+		gtk.ButtonNewFromIconName("document-edit-symbolic", gtk.ICON_SIZE_BUTTON),
+	)
+	editEnvBtn.SetTooltipText("Edit environment")
+	editEnvBtn.SetSensitive(false)
+
 	envCombo := utils.Must(gtk.ComboBoxTextNew())
 	envCombo.AppendText("None")
 	envCombo.SetActive(0)
+
+	noEnvLoader := func(key string) string {
+		return key
+	}
+
+	client.GetEnv = noEnvLoader
 
 	envs := utils.Must(store.Project.ListEnvironments())
 
@@ -110,6 +122,13 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 	}
 
 	envCombo.Connect("changed", func() {
+		editEnvBtn.SetSensitive(envCombo.GetActive() != 0)
+
+		if envCombo.GetActive() == 0 {
+			client.GetEnv = noEnvLoader
+			return
+		}
+
 		name := envCombo.GetActiveText()
 		variables, err := parseEnv(fmt.Sprintf("%s/%s", store.Project.RootDir, name))
 		if err != nil {
@@ -121,6 +140,10 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 		}
 	})
 
+	topBar.PackEnd(
+		editEnvBtn,
+		false, false, 5,
+	)
 	topBar.PackEnd(
 		envCombo,
 		false, false, 5,

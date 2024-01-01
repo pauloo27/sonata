@@ -63,6 +63,7 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	settingsPopover.Add(settingsContainer)
 
 	newRequestBtn := utils.Must(gtk.ButtonNewWithLabel("New Request"))
+	newEnvBtn := utils.Must(gtk.ButtonNewWithLabel("New Environment"))
 	closeProjectBtn := utils.Must(gtk.ButtonNewWithLabel("Close Project"))
 	aboutBtn := utils.Must(gtk.ButtonNewWithLabel("About"))
 
@@ -120,6 +121,7 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 	})
 
 	settingsContainer.Add(newRequestBtn)
+	settingsContainer.Add(newEnvBtn)
 	settingsContainer.Add(closeProjectBtn)
 	settingsContainer.Add(aboutBtn)
 	settingsContainer.ShowAll()
