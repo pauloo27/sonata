@@ -1,10 +1,8 @@
 # 0.1.0
 
 - support form body type
-
 - create new env
 - edit env window
-- simple README.md
 
 # Backlog
 
