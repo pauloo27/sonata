@@ -56,6 +56,17 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 	if err != nil {
 		return nil, err
 	}
+	for key, valueTmpl := range req.Headers {
+		finalValue, err := ExecuteTemplate(
+			"req-header-tmpl",
+			valueTmpl,
+			variables,
+		)
+		if err != nil {
+			return nil, err
+		}
+		httpReq.Header.Add(key, finalValue)
+	}
 
 	start := time.Now()
 

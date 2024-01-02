@@ -23,7 +23,8 @@ type ProjectStore struct {
 	Project       *data.Project
 	SavedRequest  *data.Request
 	DraftRequest  *data.Request
-	VarStore      *VariablesStore
+	VarStore      *utils.PairStore
+	HeaderStore   *utils.PairStore
 	RequestCh     chan *data.Request
 	ResponseCh    chan *client.Response
 	ReloadSidebar func(selectedRequest *data.Request)
@@ -43,7 +44,6 @@ func Start(params ...interface{}) *gtk.Window {
 	store := &ProjectStore{
 		Window:    gtkWin,
 		Project:   project,
-		VarStore:  newVariablesStore(),
 		RequestCh: make(chan *data.Request, 2),
 	}
 
@@ -125,7 +125,6 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 		editEnvBtn.SetSensitive(envCombo.GetActive() != 0)
 
 		if envCombo.GetActive() == 0 {
-			client.GetEnv = noEnvLoader
 			return
 		}
 

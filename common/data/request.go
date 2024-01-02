@@ -60,10 +60,11 @@ type Request struct {
 	Description string     `json:"description"`
 	Method      HTTPMethod `json:"method"`
 
-	URL      string            `json:"url"`
-	BodyType BodyType          `json:"body_type"`
-	Body     string            `json:"body_template"`
-	Headers  map[string]string `json:"headers"`
+	URL       string            `json:"url"`
+	BodyType  BodyType          `json:"body_type"`
+	Body      string            `json:"body_template"`
+	Headers   map[string]string `json:"headers"`
+	Variables map[string]string `json:"variables"`
 
 	Version string `json:"version"`
 
@@ -122,6 +123,7 @@ func (r *Request) Clone() *Request {
 		BodyType:    r.BodyType,
 		Body:        r.Body,
 		Headers:     r.Headers,
+		Variables:   r.Variables,
 		Version:     r.Version,
 
 		path: r.path,

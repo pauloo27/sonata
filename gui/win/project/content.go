@@ -43,6 +43,9 @@ func newRequestNameContainer(store *ProjectStore) *gtk.Box {
 
 	saveBtn := utils.Must(gtk.ButtonNewWithLabel("Save"))
 	saveBtn.Connect("clicked", func() {
+		store.DraftRequest.Headers = store.HeaderStore.ToMap()
+		store.DraftRequest.Variables = store.VarStore.ToMap()
+
 		if store.DraftRequest.Name != store.SavedRequest.Name {
 			err := store.DraftRequest.Rename(store.DraftRequest.Name)
 			if err != nil {
@@ -114,11 +117,9 @@ func newRequestURLContainer(
 
 		go func() {
 			client := client.NewClient()
-			variables := make(map[string]string)
+			variables := store.VarStore.ToMap()
 
-			for _, variable := range store.VarStore.List() {
-				variables[variable.Key] = variable.Value
-			}
+			store.DraftRequest.Headers = store.HeaderStore.ToMap()
 
 			fmt.Println("Running request...")
 			res, err := client.Run(store.DraftRequest, variables)
@@ -147,7 +148,7 @@ func newRequestURLContainer(
 
 func newRequestStructureContainer(store *ProjectStore) *gtk.Notebook {
 	container := utils.Must(gtk.NotebookNew())
-	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
+	headersContainer := newHeadersContainer(store)
 
 	bodyContainer := newBodyContainer(store)
 
@@ -229,55 +230,6 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 	return container
 }
 
-func newResponseContainer(
-	store *ProjectStore,
-) *gtk.Box {
-	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
-
-	notebook := utils.Must(gtk.NotebookNew())
-
-	bodyContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
-
-	headersContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
-
-	newLbl := func(label string) *gtk.Label {
-		lbl, err := gtk.LabelNew(label)
-		utils.HandleErr(err)
-
-		return lbl
-	}
-
-	bodyContainer.Add(newLbl("Body"))
-	headersContainer.Add(newLbl("Headers"))
-
-	notebook.AppendPage(bodyContainer, newLbl("Body"))
-	notebook.AppendPage(headersContainer, newLbl("Headers"))
-	notebook.SetVExpand(true)
-
-	title := utils.Must(gtk.LabelNew("Response"))
-	title.SetHAlign(gtk.ALIGN_CENTER)
-
-	container.Add(title)
-	container.Add(notebook)
-
-	go func() {
-		for {
-			response := <-store.ResponseCh
-			if response != nil {
-				body := response.Body
-				glib.IdleAdd(func() {
-					notebook.SetCurrentPage(0)
-					utils.ClearChildren(bodyContainer.Container)
-					bodyContainer.Add(utils.NewEditor(body, false, "json"))
-					bodyContainer.ShowAll()
-				})
-			}
-		}
-	}()
-
-	return container
-}
-
 func newEmptyContentContainer() *gtk.Box {
 	container := utils.Must(gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0))
 	container.SetHExpand(true)
@@ -298,4 +250,11 @@ func newEmptyContentContainer() *gtk.Box {
 
 func handleRequestError(store *ProjectStore, err error) {
 	utils.ShowErrorDialog(store.Window, err.Error())
+}
+
+func newHeadersContainer(store *ProjectStore) *utils.KeyValueEditor {
+	kvEditor := utils.NewKeyValueEditor(store.DraftRequest.Headers)
+	store.HeaderStore = kvEditor.Store
+
+	return kvEditor
 }

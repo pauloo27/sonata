@@ -1,10 +1,7 @@
 # 0.1.0
 
-- show response headers
-- edit request headers
 - support form body type
 
-- store/load variables in request file
 - create new env
 - edit env window
 - simple README.md
