@@ -8,7 +8,7 @@ import (
 )
 
 type SonataWindow struct {
-	Start func(...interface{}) *gtk.Window
+	Start func(...any) *gtk.Window
 }
 
 var (
@@ -30,7 +30,7 @@ func AddWindow(name string, win *SonataWindow) {
 	routes[name] = win
 }
 
-func Replace(name string, params ...interface{}) {
+func Replace(name string, params ...any) {
 	lock.Lock()
 	defer lock.Unlock()
 

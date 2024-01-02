@@ -24,6 +24,7 @@ type Project struct {
 func LoadProject(rootDir string) (*Project, error) {
 	var project Project
 
+	/* #nosec G304 */
 	data, err := os.ReadFile(path.Join(rootDir, "sonata.json"))
 	if err != nil {
 		return nil, err
@@ -95,7 +96,9 @@ func (p *Project) Save() error {
 		return err
 	}
 
-	return os.WriteFile(path.Join(p.RootDir, "sonata.json"), data, 420)
+	/* #nosec G306 */
+	/* #nosec G302 */
+	return os.WriteFile(path.Join(p.RootDir, "sonata.json"), data, 0644)
 }
 
 func (p *Project) GetRequest(name string) (*Request, bool) {

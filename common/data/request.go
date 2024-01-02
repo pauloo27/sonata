@@ -98,7 +98,8 @@ func (r *Request) Save() error {
 		return err
 	}
 
-	return os.WriteFile(r.path, data, 420)
+	/* #nosec G306 */
+	return os.WriteFile(r.path, data, 0644)
 }
 
 func (r *Request) Rename(newName string) error {

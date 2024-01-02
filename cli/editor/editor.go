@@ -24,7 +24,8 @@ func ReadFromEditor(extension string) (string, error) {
 		return "", err
 	}
 
-	cmd := exec.Command(editorCmd, append(editorArgs, tmpFile.Name())...) //nolint:gosec
+	/* #nosec G204 */
+	cmd := exec.Command(editorCmd, append(editorArgs, tmpFile.Name())...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

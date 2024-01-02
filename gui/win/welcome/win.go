@@ -12,7 +12,7 @@ func init() {
 	})
 }
 
-func Start(...interface{}) *gtk.Window {
+func Start(...any) *gtk.Window {
 	gtkWin := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 
 	gtkWin.SetTitle("Sonata")

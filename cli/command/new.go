@@ -7,7 +7,7 @@ var New = &cobra.Command{
 	Short: "Create a new thing",
 	Long:  "Create a new project or request",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

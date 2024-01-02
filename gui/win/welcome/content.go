@@ -136,6 +136,8 @@ func newRecentProjectsContainer(parent *gtk.Window) *gtk.Box {
 func listRecentProjects() []string {
 	finalPath := os.ExpandEnv(recentProjectsPath)
 
+	/* #nosec G304 */
+	/* #nosec G302 */
 	file, err := os.OpenFile(finalPath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil
@@ -163,6 +165,8 @@ func listRecentProjects() []string {
 }
 
 func addProjectToRecent(projectPath string) error {
+	/* #nosec G304 */
+	/* #nosec G302 */
 	file, err := os.OpenFile(
 		os.ExpandEnv(recentProjectsPath),
 		os.O_RDWR|os.O_CREATE, 0644,

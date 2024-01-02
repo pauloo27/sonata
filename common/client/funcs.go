@@ -20,6 +20,7 @@ var (
 		"pathEscape":  pathEscape,
 		"htmlEscape":  htmlEscape,
 		"env":         env,
+		"orDefault":   orDefault,
 	}
 )
 

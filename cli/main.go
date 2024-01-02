@@ -12,7 +12,7 @@ var rootCmd = &cobra.Command{
 	Short: "Sleepy HTTP Client",
 	Long:  "Run HTTP requests and etc",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 		os.Exit(0)
 	},
 }

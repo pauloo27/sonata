@@ -18,7 +18,10 @@ var cssData = `
 func loadCSS() {
 	cssProvider, err := gtk.CssProviderNew()
 	utils.HandleErr(err)
-	cssProvider.LoadFromData(cssData)
+
+	err = cssProvider.LoadFromData(cssData)
+	utils.HandleErr(err)
+
 	screen, err := gdk.ScreenGetDefault()
 	utils.HandleErr(err)
 	gtk.AddProviderForScreen(screen, cssProvider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)

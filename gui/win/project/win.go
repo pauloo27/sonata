@@ -31,7 +31,7 @@ type ProjectStore struct {
 	Window        *gtk.Window
 }
 
-func Start(params ...interface{}) *gtk.Window {
+func Start(params ...any) *gtk.Window {
 	gtkWin := utils.Must(gtk.WindowNew(gtk.WINDOW_TOPLEVEL))
 	gtkWin.SetTitle("Sonata")
 	gtkWin.SetDefaultSize(800, 600)
@@ -158,6 +158,8 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 }
 
 func parseEnv(path string) (map[string]string, error) {
+	/* #nosec G304 */
+	/* #nosec G302 */
 	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println(path, err)
