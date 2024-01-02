@@ -87,6 +87,7 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 				"",
 				data.BodyTypeJSON,
 				"",
+				nil,
 			)
 			err := req.Save()
 			if err != nil {

@@ -75,6 +75,7 @@ type Request struct {
 func (p *Project) NewRequest(
 	name string, description string, method HTTPMethod,
 	url string, bodyType BodyType, bodyTemplate string,
+	headers map[string]string,
 ) *Request {
 	return &Request{
 		Name:        name,
@@ -84,6 +85,7 @@ func (p *Project) NewRequest(
 		BodyType:    bodyType,
 		Body:        bodyTemplate,
 		Version:     CurrentVersion,
+		Headers:     headers,
 
 		path: fmt.Sprintf("%s/%s.request.json", p.RootDir, name),
 		p:    p,

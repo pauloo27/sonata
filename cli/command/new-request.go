@@ -1,6 +1,8 @@
 package command
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/huh"
 	"github.com/pauloo27/sonata/cli/editor"
 	"github.com/pauloo27/sonata/cli/utils"
@@ -19,7 +21,7 @@ var NewRequest = &cobra.Command{
 			panic(err)
 		}
 
-		var name, url, body string
+		var name, url, body, rawHeaders string
 		var bodyType data.BodyType
 		var method data.HTTPMethod
 
@@ -35,6 +37,7 @@ var NewRequest = &cobra.Command{
 						huh.NewOption("DELETE", data.HTTPMethodDelete),
 						huh.NewOption("PATCH", data.HTTPMethodPatch),
 					),
+				huh.NewText().Title("Headers").Placeholder("Header=value").Value(&rawHeaders),
 			).Title("Create new sonata HTTP request"),
 		)
 
@@ -64,6 +67,8 @@ var NewRequest = &cobra.Command{
 			}
 		}
 
+		headers := parseHeaders(rawHeaders)
+
 		request := project.NewRequest(
 			name,
 			"", // TODO: add description
@@ -71,9 +76,27 @@ var NewRequest = &cobra.Command{
 			url,
 			bodyType,
 			body,
+			headers,
 		)
 		if err := request.Save(); err != nil {
 			panic(err)
 		}
 	},
+}
+
+func parseHeaders(raw string) map[string]string {
+	headers := make(map[string]string)
+
+	lines := strings.Split(raw, "\n")
+
+	for _, line := range lines {
+		parts := strings.SplitN(line, "=", 2)
+
+		name := parts[0]
+		value := parts[1]
+
+		headers[name] = value
+	}
+
+	return headers
 }

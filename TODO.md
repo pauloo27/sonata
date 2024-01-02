@@ -6,8 +6,6 @@
 - edit env window
 - simple README.md
 
-- cli: create headers
-
 # Backlog
 
 - delete button in recent projects listing
