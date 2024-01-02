@@ -2,7 +2,9 @@
 
 Yet another Rest API Client, but with a simple CLI and a GTK interface.
 
-_don't take it too serious, it's just a hooby project._
+_don't take it too serious, it's just a hobby project._
+
+![Sonata GUI](./.github/image.webp)
 
 ## Usage - CLI
 
