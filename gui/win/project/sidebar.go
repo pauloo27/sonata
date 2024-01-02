@@ -2,6 +2,8 @@ package project
 
 import (
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/common/data"
@@ -102,6 +104,16 @@ func newSidebarHeader(store *ProjectStore) *gtk.HeaderBar {
 
 			store.ReloadSidebar(nil)
 		}()
+	})
+
+	newEnvBtn.Connect("clicked", func() {
+		name := utils.ShowEntryDialog(store.Window, "New Environment", "Name:")
+		name = name + ".env"
+
+		_, err := os.Create(path.Join(store.Project.RootDir, name))
+		if err != nil {
+			utils.ShowErrorDialog(store.Window, "Failed to create environment")
+		}
 	})
 
 	closeProjectBtn.Connect("clicked", func() {

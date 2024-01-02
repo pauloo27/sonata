@@ -109,6 +109,29 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 	envCombo.AppendText("None")
 	envCombo.SetActive(0)
 
+	editEnvBtn.Connect("clicked", func() {
+		envName := envCombo.GetActiveText()
+
+		file, err := os.OpenFile(
+			fmt.Sprintf("%s/%s", store.Project.RootDir, envName),
+			os.O_RDONLY,
+			0644,
+		)
+
+		if err != nil {
+			utils.ShowErrorDialog(store.Window, "Cannot load environment file")
+			return
+		}
+
+		envs, err := godotenv.Parse(file)
+		if err != nil {
+			utils.ShowErrorDialog(store.Window, "Cannot parse environment file")
+			return
+		}
+
+		win.ShowWindow("env", store.Project, envName, envs)
+	})
+
 	noEnvLoader := func(key string) string {
 		return key
 	}
@@ -129,13 +152,10 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 		}
 
 		name := envCombo.GetActiveText()
-		variables, err := parseEnv(fmt.Sprintf("%s/%s", store.Project.RootDir, name))
-		if err != nil {
-			utils.ShowErrorDialog(store.Window, "Cannot load environment")
-		}
 
-		client.GetEnv = func(name string) string {
-			return variables[name]
+		err := client.UseEnvFile(fmt.Sprintf("%s/%s", store.Project.RootDir, name))
+		if err != nil {
+			utils.ShowErrorDialog(store.Window, "Cannot load environment file")
 		}
 	})
 
@@ -155,15 +175,4 @@ func newContentWrapperContainer(store *ProjectStore) *gtk.Box {
 	container.Add(topBar)
 
 	return container
-}
-
-func parseEnv(path string) (map[string]string, error) {
-	/* #nosec G304 */
-	/* #nosec G302 */
-	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	if err != nil {
-		fmt.Println(path, err)
-		return nil, err
-	}
-	return godotenv.Parse(file)
 }

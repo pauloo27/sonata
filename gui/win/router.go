@@ -48,3 +48,12 @@ func Replace(name string, params ...any) {
 	lastWindow = win.Start(params...)
 	replacingWindows = false
 }
+
+func ShowWindow(name string, params ...any) {
+	win, found := routes[name]
+	if !found {
+		panic(fmt.Sprintf("Window %s not found", name))
+	}
+
+	win.Start(params...)
+}
