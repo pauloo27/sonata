@@ -179,12 +179,19 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 
 	var editor *utils.Editor
 
+	handleEditorChange := func() {
+		store.DraftRequest.Body = utils.Must(
+			editor.Buffer.GetText(editor.Buffer.GetStartIter(), editor.Buffer.GetEndIter(), true),
+		)
+	}
+
 	if store.DraftRequest.BodyType != data.BodyTypeNone {
 		editor = utils.NewEditor(
 			store.DraftRequest.Body,
 			true,
 			data.BodyTypeExtensions[store.DraftRequest.BodyType],
 		)
+		editor.Buffer.Connect("changed", handleEditorChange)
 	}
 
 	bodyTypeEntry.SetActive(selectedBodyTypeIdx)
@@ -204,6 +211,7 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 				data.BodyTypeExtensions[store.DraftRequest.BodyType],
 			)
 			container.Add(editor)
+			editor.Buffer.Connect("changed", handleEditorChange)
 			editor.ShowAll()
 		}
 
@@ -214,18 +222,14 @@ func newBodyContainer(store *ProjectStore) *gtk.Box {
 		editor.Buffer.SetLanguage(lang)
 	})
 
-	editor.Buffer.Connect("changed", func() {
-		store.DraftRequest.Body = utils.Must(
-			editor.Buffer.GetText(editor.Buffer.GetStartIter(), editor.Buffer.GetEndIter(), true),
-		)
-	})
-
 	bodyTypeContainer := utils.Must(gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 5))
 	bodyTypeContainer.Add(bodyTypeLbl)
 	bodyTypeContainer.Add(bodyTypeEntry)
 
 	container.Add(bodyTypeContainer)
-	container.Add(editor)
+	if editor != nil {
+		container.Add(editor)
+	}
 
 	return container
 }
