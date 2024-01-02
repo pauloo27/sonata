@@ -43,16 +43,26 @@ func newResponseContainer(
 					bodyContainer.Add(utils.NewEditor(body, false, "json"))
 					bodyContainer.ShowAll()
 
-					values := make(map[string]string)
-					for key, value := range headers {
-						values[key] = value[0]
+					grid := utils.Must(gtk.GridNew())
+					grid.SetColumnHomogeneous(true)
+
+					counter := 0
+
+					for key, values := range headers {
+						keyLbl := utils.Must(gtk.LabelNew(key))
+						valuesLbl := utils.Must(gtk.LabelNew(values[0]))
+
+						keyLbl.SetSelectable(true)
+						valuesLbl.SetSelectable(true)
+
+						grid.Attach(utils.Scrollable(keyLbl), 0, counter, 1, 1)
+						grid.Attach(utils.Scrollable(valuesLbl), 1, counter, 1, 1)
+
+						counter++
 					}
 
-					headerEditor := utils.NewKeyValueEditor(values)
-
-					headerEditor.SetVExpand(true)
+					headersContainer.Add(utils.Scrollable(grid))
 					headersContainer.SetVExpand(true)
-					headersContainer.Add(headerEditor)
 					headersContainer.ShowAll()
 				})
 			}
