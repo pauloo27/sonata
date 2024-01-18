@@ -12,11 +12,11 @@ build-gui:
 # (build but with a smaller binary)
 .PHONY: dist-gui
 dist-gui:
-	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata-gui ./gui/sonata
+	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata-gui ./gui/
 
 .PHONY: dist-cli
 dist-cli:
-	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata ./cli/sonata
+	go build -gcflags=all=-l -v -ldflags="-w -s" -o sonata ./cli
 
 .PHONY: run
 run: build
