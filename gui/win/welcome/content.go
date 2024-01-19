@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	recentProjectsPath = "$HOME/.cache/sonata/recent_projects"
+	cacheDirPath       = "$HOME/.cache/sonata"
+	recentProjectsPath = cacheDirPath + "/recent_projects"
 	maxRecentProjects  = 5
 )
 
@@ -79,6 +80,7 @@ func newContentContainer(gtkWin *gtk.Window) *gtk.Box {
 
 		err = addProjectToRecent(selectedPath)
 		if err != nil {
+			println(err.Error())
 			utils.ShowErrorDialog(gtkWin, "Failed to add project to recents")
 		}
 		win.Replace("project", project)
@@ -167,6 +169,12 @@ func listRecentProjects() []string {
 func addProjectToRecent(projectPath string) error {
 	/* #nosec G304 */
 	/* #nosec G302 */
+
+	err := os.MkdirAll(os.ExpandEnv(cacheDirPath), 0755)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(
 		os.ExpandEnv(recentProjectsPath),
 		os.O_RDWR|os.O_CREATE, 0644,
