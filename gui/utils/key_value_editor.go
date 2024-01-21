@@ -5,13 +5,20 @@ import (
 )
 
 type PairStore struct {
-	variables []*KeyValuePair
-	container *gtk.Grid
+	variables     []*KeyValuePair
+	container     *gtk.Grid
+	onAfterUpdate func()
 }
 
 func newPairStore() *PairStore {
 	return &PairStore{
 		variables: make([]*KeyValuePair, 0),
+	}
+}
+
+func (s *PairStore) afterUpdate() {
+	if s.onAfterUpdate != nil {
+		s.onAfterUpdate()
 	}
 }
 
@@ -21,9 +28,11 @@ func (s *PairStore) Delete(index int) {
 	ClearChildren(s.container.Container)
 	showVariables(s, s.container)
 	s.container.ShowAll()
+
+	s.afterUpdate()
 }
 
-func (s *PairStore) add(key, value string) {
+func (s *PairStore) addBeforeStart(key, value string) {
 	s.variables = append(s.variables, &KeyValuePair{
 		Key:   key,
 		Value: value,
@@ -38,6 +47,8 @@ func (s *PairStore) Add(key, value string) {
 	ClearChildren(s.container.Container)
 	showVariables(s, s.container)
 	s.container.ShowAll()
+
+	s.afterUpdate()
 }
 
 func (s *PairStore) Get(key string) string {
@@ -71,6 +82,10 @@ type KeyValueEditor struct {
 	Store *PairStore
 }
 
+func (kve *KeyValueEditor) OnAfterUpdate(handler func()) {
+	kve.Store.onAfterUpdate = handler
+}
+
 func NewKeyValueEditor(values map[string]string) *KeyValueEditor {
 	container, err := gtk.GridNew()
 	HandleErr(err)
@@ -89,7 +104,7 @@ func NewKeyValueEditor(values map[string]string) *KeyValueEditor {
 	store := newPairStore()
 
 	for key, value := range values {
-		store.add(key, value)
+		store.addBeforeStart(key, value)
 	}
 
 	store.container = container
@@ -156,12 +171,14 @@ func newVariableEntry(store *PairStore, variable *KeyValuePair) (*gtk.Entry, *gt
 		var err error
 		variable.Key, err = keyEntry.GetText()
 		HandleErr(err)
+		store.afterUpdate()
 	})
 
 	valueEntry.Connect("changed", func() {
 		var err error
 		variable.Value, err = valueEntry.GetText()
 		HandleErr(err)
+		store.afterUpdate()
 	})
 
 	return keyEntry, valueEntry

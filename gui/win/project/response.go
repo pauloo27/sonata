@@ -1,6 +1,9 @@
 package project
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pauloo27/sonata/gui/utils"
@@ -36,6 +39,14 @@ func newResponseContainer(
 
 				glib.IdleAdd(func() {
 					notebook.SetCurrentPage(0)
+
+					title.SetText(
+						fmt.Sprintf(
+							"Response - %d (%s)",
+							response.StatusCode,
+							http.StatusText(response.StatusCode),
+						),
+					)
 
 					utils.ClearChildren(bodyContainer.Container)
 					utils.ClearChildren(headersContainer.Container)

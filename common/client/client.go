@@ -1,9 +1,10 @@
 package client
 
 import (
-	"fmt"
+	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -40,7 +41,6 @@ func UseMap(variables map[string]string) {
 func UseEnvFile(path string) error {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
-		fmt.Println(path, err)
 		return err
 	}
 
@@ -56,6 +56,14 @@ func UseEnvFile(path string) error {
 	return nil
 }
 
+var (
+	bodyReaderFnMap = map[data.BodyType]func(*data.Request, map[string]string) (io.Reader, error){
+		data.BodyTypeJSON: newTextBodyReader,
+		data.BodyTypeText: newTextBodyReader,
+		data.BodyTypeForm: newFormBodyReader,
+	}
+)
+
 func (c *Client) Run(req *data.Request, variables map[string]string) (*Response, error) {
 	uri, err := ExecuteTemplate(
 		"req-uri-tmpl",
@@ -67,23 +75,27 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 	}
 
 	var bodyReader io.Reader
+	readerFn, found := bodyReaderFnMap[req.BodyType]
 
-	if req.Body != "" {
-		body, err := ExecuteTemplate(
-			"req-body-tmpl",
-			req.Body,
-			variables,
-		)
+	if found {
+		bodyReader, err = readerFn(req, variables)
 		if err != nil {
 			return nil, err
 		}
-		bodyReader = strings.NewReader(body)
 	}
 
 	httpReq, err := http.NewRequest(string(req.Method), uri, bodyReader)
 	if err != nil {
 		return nil, err
 	}
+
+	switch req.BodyType {
+	case data.BodyTypeJSON:
+		httpReq.Header.Add("Content-Type", "application/json")
+	case data.BodyTypeForm:
+		httpReq.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	}
+
 	for key, valueTmpl := range req.Headers {
 		finalValue, err := ExecuteTemplate(
 			"req-header-tmpl",
@@ -124,4 +136,49 @@ func (c *Client) Run(req *data.Request, variables map[string]string) (*Response,
 		Headers:    httpRes.Header,
 		Time:       took,
 	}, nil
+}
+
+func newFormBodyReader(req *data.Request, variables map[string]string) (io.Reader, error) {
+	if req.Body == "" {
+		return nil, nil
+	}
+
+	var rawValues map[string]string
+
+	err := json.Unmarshal([]byte(req.Body), &rawValues)
+	if err != nil {
+		return nil, err
+	}
+
+	values := url.Values{}
+
+	for key, valueTmpl := range rawValues {
+		value, err := ExecuteTemplate(
+			"req-body-tmpl",
+			valueTmpl,
+			variables,
+		)
+		if err != nil {
+			return nil, err
+		}
+		values.Add(key, value)
+	}
+
+	return strings.NewReader(values.Encode()), nil
+}
+
+func newTextBodyReader(req *data.Request, variables map[string]string) (io.Reader, error) {
+	if req.Body == "" {
+		return nil, nil
+	}
+
+	body, err := ExecuteTemplate(
+		"req-body-tmpl",
+		req.Body,
+		variables,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return strings.NewReader(body), nil
 }

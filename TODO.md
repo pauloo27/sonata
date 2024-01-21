@@ -1,7 +1,5 @@
 # 0.1.0
 
-- support form body type
-
 # Backlog
 
 - delete button in recent projects listing
